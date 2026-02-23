@@ -50,31 +50,29 @@ export const loginUser = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ message: "Wrong credentials" });
-    }
-
-    const userExist = await User.findOne({ email });
-
-    if (!userExist) {
-      return res.status(400).json({ message: "User does not exist" });
-    }
-
-    const isMatch = await userExist.matchPassword(password);
-
-    if (isMatch) {
-      return res.status(200).json({
-        _id: userExist._id,
-        name: userExist.name,
-        email: userExist.email,
-        role: userExist.role,
-        department: userExist.department,
-        token: generateToken(userExist._id)
+      return res.status(400).json({
+        message: "Email and password are required"
       });
-    } else {
-      return res.status(400).json({ message: "Invalid credentials" });
     }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user || !(await user.matchPassword(password))) {
+      return res.status(400).json({
+        message: "Invalid email or password"
+      });
+    }
+
+    res.status(200).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      department: user.department,
+      token: generateToken(user._id)
+    });
 
   } catch (err) {
-    return res.status(500).json({ message: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
