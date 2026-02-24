@@ -6,7 +6,7 @@ const departmentSchema=new mongoose.Schema({
     required:true
   },
   plant:{
-    type:mongoose.Schema.Types.Obj,
+    type:mongoose.Schema.Types.ObjectId,
     ref:"Plant",
     required:true
   },

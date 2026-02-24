@@ -4,6 +4,8 @@ import cors from "cors";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import testRoutes from "./routes/testRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
+import shiftRoutes from "./routes/shiftRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -24,18 +26,20 @@ app.get("/api/health", (req, res) => {
 
 app.use('/api/auth/v1', authRoutes);
 app.use('/api/auth/v2', testRoutes);
-
+app.use("/api/admin/v1", adminRoutes);
+app.use("/api/shifts/v1", shiftRoutes);
+ 
 // MUST BE LAST
-app.use((err, req, res, next) => {
-  console.error("Server error:", err.stack);
-  res.status(500).json({
-    success: false,
-    message: "Internal Server Error"
-  });
-});
+// app.use((err, req, res, next) => {
+//   console.error("Server error:", err.stack);
+//   res.status(500).json({
+//     success: false,
+//     message: "Internal Server Error"
+//   });
+// });
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(` Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

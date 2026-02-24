@@ -21,3 +21,48 @@ export const createPlant=async (req,res)=>{
     return res.status(500).json({message:err.message});
   }
 }
+
+export const createDepartment = async (req, res) => {
+  try {
+    const { name, plantId } = req.body;
+
+    if (!name || !plantId) {
+      return res.status(400).json({
+        message: "Department name and Plant ID are required"
+      });
+    }
+
+    const department = await Department.create({
+      name,
+      plant: plantId
+    });
+
+    res.status(201).json(department);
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const createUnit = async (req, res) => {
+  try {
+    const { name, departmentId,plantId } = req.body;
+
+    if (!name || !departmentId || !plantId) {
+      return res.status(400).json({
+        message: "Unit name and Department ID and PlantId  are required"
+      });
+    }
+
+    const unit = await Unit.create({
+      name,
+      department: departmentId,
+      plant:plantId
+    });
+
+    res.status(201).json(unit);
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

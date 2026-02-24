@@ -10,6 +10,11 @@ const unitSchema=new mongoose.Schema({
     ref:"Plant",
     required:true
   },
+  department:{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:"Department",
+    required:true
+  },
   capacity:{
     type:Number
   },

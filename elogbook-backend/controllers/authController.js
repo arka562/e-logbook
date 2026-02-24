@@ -11,6 +11,7 @@ const generateToken = (id) => {
 
 export const registerUser = async (req, res) => {
   try {
+     console.log("Body received:", req.body); 
     const { name, email, password, role, department } = req.body;
 
     if (!name || !email || !password || !department) {

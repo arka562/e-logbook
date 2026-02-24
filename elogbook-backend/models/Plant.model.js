@@ -11,6 +11,6 @@ const plantSchema=new mongoose.Schema({
   },
 },{timestamps:true});
 
-const Plant=mongoose.modell("Plant",plantSchema);
+const Plant=mongoose.model("Plant",plantSchema);
 
 export default Plant;
