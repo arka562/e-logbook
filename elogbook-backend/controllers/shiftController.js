@@ -81,3 +81,111 @@ export const createShift = async (req, res) => {
     });
   }
 };
+
+export const getShifts = async (req, res) => {
+  try {
+    const { plant, unit, date } = req.query;
+
+    const filter = {};
+    if (plant) filter.plant = plant;
+    if (unit) filter.unit = unit;
+    if (date) filter.date = date;
+
+    const shifts = await Shift.find(filter)
+      .populate("plant", "name")
+      .populate("unit", "name")
+      .populate("shiftInCharge", "name role");
+
+    res.status(200).json({
+      success: true,
+      count: shifts.length,
+      data: shifts
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};
+
+export const getShiftById = async (req, res) => {
+  try {
+    const shift = await Shift.findById(req.params.id)
+      .populate("plant")
+      .populate("unit")
+      .populate("shiftInCharge")
+      .populate("engineers");
+
+    if (!shift) {
+      return res.status(404).json({
+        success: false,
+        message: "Shift not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: shift
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};
+
+export const closeShift = async (req, res) => {
+  try {
+    const shift = await Shift.findById(req.params.id);
+
+    if (!shift) {
+      return res.status(404).json({
+        success: false,
+        message: "Shift not found"
+      });
+    }
+
+    shift.status = "closed";
+    await shift.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Shift closed successfully",
+      data: shift
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};
+
+export const deleteShift = async (req, res) => {
+  try {
+    const shift = await Shift.findByIdAndDelete(req.params.id);
+
+    if (!shift) {
+      return res.status(404).json({
+        success: false,
+        message: "Shift not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Shift deleted successfully"
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};

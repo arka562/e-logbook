@@ -6,6 +6,7 @@ import authRoutes from "./routes/authRoutes.js";
 import testRoutes from "./routes/testRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import shiftRoutes from "./routes/shiftRoutes.js";
+import parameterRoutes from "./routes/parameterRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -28,6 +29,7 @@ app.use('/api/auth/v1', authRoutes);
 app.use('/api/auth/v2', testRoutes);
 app.use("/api/admin/v1", adminRoutes);
 app.use("/api/shifts/v1", shiftRoutes);
+app.use("/api/parameters/v1", parameterRoutes);
  
 // MUST BE LAST
 // app.use((err, req, res, next) => {

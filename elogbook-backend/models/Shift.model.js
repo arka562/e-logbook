@@ -34,7 +34,7 @@ const shiftSchema = new mongoose.Schema(
     ],
     status: {
       type: String,
-      enum: ["draft", "submitted", "approved", "locked"],
+      enum: ["draft", "submitted", "approved", "locked","close"],
       default: "draft",
     },
   },
