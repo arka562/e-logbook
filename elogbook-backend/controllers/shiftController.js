@@ -189,3 +189,145 @@ export const deleteShift = async (req, res) => {
     });
   }
 };
+
+export const submitShift = async (req, res) => {
+  try {
+    const { shiftId } = req.params;
+    const shift = await Shift.findById(shiftId);
+
+    if (!shift) {
+      return res.status(404).json({
+        success: false,
+        message: "Shift not found"
+      });
+    }
+
+    if (shift.status !== "draft") {
+      return res.status(400).json({
+        success: false,
+        message: "Only draft shift can be submitted"
+      });
+    }
+
+    if (!["operator", "shift_incharge"].includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to submit shift"
+      });
+    }
+
+    shift.status = "submitted";
+    shift.submittedBy = req.user._id;
+    shift.submittedAt = new Date();
+
+    await shift.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Shift submitted successfully",
+      data: shift
+    });
+
+  } catch (error) {
+    console.error("SUBMIT SHIFT ERROR:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};
+
+export const approveShift = async (req, res) => {
+  try {
+    const { shiftId } = req.params;
+    const shift = await Shift.findById(shiftId);
+
+    if (!shift) {
+      return res.status(404).json({
+        success: false,
+        message: "Shift not found"
+      });
+    }
+
+    if (shift.status !== "submitted") {
+      return res.status(400).json({
+        success: false,
+        message: "Only submitted shift can be approved"
+      });
+    }
+
+    if (!["shift_incharge", "hod", "admin"].includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to approve shift"
+      });
+    }
+
+    shift.status = "approved";
+    shift.approvedBy = req.user._id;
+    shift.approvedAt = new Date();
+
+    await shift.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Shift approved successfully",
+      data: shift
+    });
+
+  } catch (error) {
+    console.error("APPROVE SHIFT ERROR:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};
+
+export const lockShift = async (req, res) => {
+  try {
+    const { shiftId } = req.params;
+
+    const shift = await Shift.findById(shiftId);
+
+    if (!shift) {
+      return res.status(404).json({
+        success: false,
+        message: "Shift not found"
+      });
+    }
+
+    if (shift.status !== "approved") {
+      return res.status(400).json({
+        success: false,
+        message: "Only approved shift can be locked"
+      });
+    }
+
+    if (!["hod", "admin"].includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to lock shift"
+      });
+    }
+
+    shift.status = "locked";
+    shift.lockedBy = req.user._id;
+    shift.lockedAt = new Date();
+
+    await shift.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Shift locked successfully",
+      data: shift
+    });
+
+  } catch (error) {
+    console.error("LOCK SHIFT ERROR:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};

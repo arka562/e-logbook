@@ -8,6 +8,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import shiftRoutes from "./routes/shiftRoutes.js";
 import parameterRoutes from "./routes/parameterRoutes.js";
 import eventRoutes from "./routes/eventRoutes.js";
+import issueRoutes from "./routes/issueRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -32,7 +33,7 @@ app.use("/api/admin/v1", adminRoutes);
 app.use("/api/shifts/v1", shiftRoutes);
 app.use("/api/parameters/v1", parameterRoutes);
 app.use("/api/event/v1",eventRoutes);
- 
+app.use("/api/issues/v1", issueRoutes);
 // MUST BE LAST
 // app.use((err, req, res, next) => {
 //   console.error("Server error:", err.stack);

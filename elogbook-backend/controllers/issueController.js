@@ -121,7 +121,7 @@ export const updateIssueStatus = async (req, res) => {
 
     const issue = await Issue.findById(issueId);
 
-    if (!issue || issue.isDeleted) {
+    if (!issue) {
       return res.status(404).json({
         success: false,
         message: "Issue not found"
