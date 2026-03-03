@@ -68,7 +68,84 @@ export const createIssue = async (req, res) => {
     });
   }
 };
+export const getIssues = async (req, res) => {
+  try {
+    const {
+      status,
+      unit,
+      plant,
+      startDate,
+      endDate,
+      page = 1,
+      limit = 10
+    } = req.query;
 
+    const pageNum = Number(page) || 1;
+    const limitNum = Number(limit) || 10;
+
+    let filter = {};
+
+    if (status) filter.status = status;
+    if (unit) filter.unit = unit;
+    if (plant) filter.plant = plant;
+
+    if (startDate || endDate) {
+      filter.createdAt = {};
+
+      if (startDate) {
+        const start = new Date(startDate);
+        if (isNaN(start.getTime())) {
+          return res.status(400).json({
+            success: false,
+            message: "Invalid startDate"
+          });
+        }
+        filter.createdAt.$gte = start;
+      }
+
+      if (endDate) {
+        const end = new Date(endDate);
+        if (isNaN(end.getTime())) {
+          return res.status(400).json({
+            success: false,
+            message: "Invalid endDate"
+          });
+        }
+        end.setHours(23, 59, 59, 999);
+        filter.createdAt.$lte = end;
+      }
+    }
+    if (req.user.role === "operator") {
+      filter.createdBy = req.user._id;
+    }
+
+    const issues = await Issue.find(filter)
+      .populate("unit", "name")
+      .populate("createdBy", "name role")
+      .populate("resolvedBy", "name role")
+      .sort({ createdAt: -1 })
+      .skip((pageNum - 1) * limitNum)
+      .limit(limitNum)
+      .lean();
+
+    const total = await Issue.countDocuments(filter);
+
+    res.status(200).json({
+      success: true,
+      total,
+      page: pageNum,
+      pages: Math.ceil(total / limitNum),
+      data: issues
+    });
+
+  } catch (error) {
+    console.error("GET ISSUES ERROR:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};
 
 export const getIssuesByShift = async (req, res) => {
   try {

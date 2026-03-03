@@ -84,25 +84,43 @@ export const createShift = async (req, res) => {
 
 export const getShifts = async (req, res) => {
   try {
-    const { plant, unit, date } = req.query;
+    const { date, plant, unit, status, page = 1, limit = 10 } = req.query;
 
-    const filter = {};
+    let filter = {};
+
+    if (date) {
+      const start = new Date(date);
+      start.setHours(0, 0, 0, 0);
+
+      const end = new Date(date);
+      end.setHours(23, 59, 59, 999);
+
+      filter.date = { $gte: start, $lte: end };
+    }
+
     if (plant) filter.plant = plant;
     if (unit) filter.unit = unit;
-    if (date) filter.date = date;
+    if (status) filter.status = status;
 
     const shifts = await Shift.find(filter)
       .populate("plant", "name")
       .populate("unit", "name")
-      .populate("shiftInCharge", "name role");
+      .populate("shiftInCharge", "name role")
+      .sort({ date: -1 })
+      .skip((page - 1) * limit)
+      .limit(Number(limit));
+
+    const total = await Shift.countDocuments(filter);
 
     res.status(200).json({
       success: true,
-      count: shifts.length,
+      total,
+      page: Number(page),
       data: shifts
     });
 
   } catch (error) {
+    console.error("GET SHIFTS ERROR:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error"
