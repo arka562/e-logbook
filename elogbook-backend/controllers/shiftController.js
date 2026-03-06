@@ -4,7 +4,6 @@ import Unit from "../models/Unit.model.js";
 import User from "../models/User.model.js";
 
 export const createShift = async (req, res) => {
-  try {
     const {
       date,
       shiftType,
@@ -72,18 +71,9 @@ export const createShift = async (req, res) => {
       message: "Shift created successfully",
       data: shift
     });
-
-  } catch (error) {
-    console.error("CREATE SHIFT ERROR:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
-  }
 };
 
 export const getShifts = async (req, res) => {
-  try {
     const { date, plant, unit, status, page = 1, limit = 10 } = req.query;
 
     let filter = {};
@@ -118,18 +108,9 @@ export const getShifts = async (req, res) => {
       page: Number(page),
       data: shifts
     });
-
-  } catch (error) {
-    console.error("GET SHIFTS ERROR:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
-  }
 };
 
 export const getShiftById = async (req, res) => {
-  try {
     const shift = await Shift.findById(req.params.id)
       .populate("plant")
       .populate("unit")
@@ -147,17 +128,9 @@ export const getShiftById = async (req, res) => {
       success: true,
       data: shift
     });
-
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
-  }
 };
 
 export const closeShift = async (req, res) => {
-  try {
     const shift = await Shift.findById(req.params.id);
 
     if (!shift) {
@@ -175,17 +148,9 @@ export const closeShift = async (req, res) => {
       message: "Shift closed successfully",
       data: shift
     });
-
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
-  }
 };
 
 export const deleteShift = async (req, res) => {
-  try {
     const shift = await Shift.findByIdAndDelete(req.params.id);
 
     if (!shift) {
@@ -199,17 +164,9 @@ export const deleteShift = async (req, res) => {
       success: true,
       message: "Shift deleted successfully"
     });
-
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
-  }
 };
 
 export const submitShift = async (req, res) => {
-  try {
     const { shiftId } = req.params;
     const shift = await Shift.findById(shiftId);
 
@@ -245,18 +202,10 @@ export const submitShift = async (req, res) => {
       message: "Shift submitted successfully",
       data: shift
     });
-
-  } catch (error) {
-    console.error("SUBMIT SHIFT ERROR:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
-  }
 };
 
 export const approveShift = async (req, res) => {
-  try {
+
     const { shiftId } = req.params;
     const shift = await Shift.findById(shiftId);
 
@@ -292,18 +241,9 @@ export const approveShift = async (req, res) => {
       message: "Shift approved successfully",
       data: shift
     });
-
-  } catch (error) {
-    console.error("APPROVE SHIFT ERROR:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
-  }
 };
 
 export const lockShift = async (req, res) => {
-  try {
     const { shiftId } = req.params;
 
     const shift = await Shift.findById(shiftId);
@@ -340,12 +280,4 @@ export const lockShift = async (req, res) => {
       message: "Shift locked successfully",
       data: shift
     });
-
-  } catch (error) {
-    console.error("LOCK SHIFT ERROR:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
-  }
 };

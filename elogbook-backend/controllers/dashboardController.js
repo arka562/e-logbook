@@ -4,7 +4,6 @@ import EventLog from "../models/EventLog.model.js";
 import ParameterEntry from "../models/ParameterTemplate.model.js";
 
 export const getDashboardSummary = async (req, res) => {
-  try {
     const { plant } = req.query;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -63,11 +62,4 @@ export const getDashboardSummary = async (req, res) => {
       }
     });
 
-  } catch (error) {
-    console.error("DASHBOARD ERROR:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
-  }
 };

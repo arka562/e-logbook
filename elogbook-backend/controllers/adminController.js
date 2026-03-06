@@ -3,7 +3,7 @@ import Unit from "../models/Unit.model.js";
 import Department from "../models/Department.model.js";
 
 export const createPlant=async (req,res)=>{
-  try{
+  
     const{name,location}=req.body;
     if(!name || !location){
       return res.status(400).json({messgae:"All fiels are required"});
@@ -17,12 +17,9 @@ export const createPlant=async (req,res)=>{
       location
     });
     res.status(201).json({message:plant});
-  }catch(err){
-    return res.status(500).json({message:err.message});
-  }
+ 
 }
 export const getPlants = async (req, res) => {
-  try {
     const plants = await Plant.find().sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -30,13 +27,10 @@ export const getPlants = async (req, res) => {
       count: plants.length,
       data: plants
     });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+  
 };
 
 export const deletePlant = async (req, res) => {
-  try {
     const plantId = req.params.id;
 
     const departmentExists = await Department.findOne({ plant: plantId });
@@ -54,13 +48,9 @@ export const deletePlant = async (req, res) => {
       message: "Plant deleted successfully"
     });
 
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
 };
 
 export const createDepartment = async (req, res) => {
-  try {
     const { name, plantId } = req.body;
 
     if (!name || !plantId) {
@@ -75,13 +65,9 @@ export const createDepartment = async (req, res) => {
     });
 
     res.status(201).json(department);
-
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
 };
 export const getDepartmentsByPlant = async (req, res) => {
-  try {
+
     const { plantId } = req.params;
 
     const departments = await Department.find({ plant: plantId });
@@ -91,13 +77,9 @@ export const getDepartmentsByPlant = async (req, res) => {
       count: departments.length,
       data: departments
     });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
 };
 
 export const createUnit = async (req, res) => {
-  try {
     const { name, departmentId,plantId } = req.body;
 
     if (!name || !departmentId || !plantId) {
@@ -114,13 +96,9 @@ export const createUnit = async (req, res) => {
 
     res.status(201).json(unit);
 
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
 };
 
 export const getUnitsByDepartment = async (req, res) => {
-  try {
     const { departmentId } = req.params;
 
     const units = await Unit.find({ department: departmentId });
@@ -130,7 +108,4 @@ export const getUnitsByDepartment = async (req, res) => {
       count: units.length,
       data: units
     });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
 };

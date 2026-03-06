@@ -3,7 +3,6 @@ import Shift from "../models/Shift.model.js";
 import Unit from "../models/Unit.model.js";
 
 export const createEvent = async (req, res) => {
-  try {
     const { shiftId, unitId, description } = req.body;
 
     if (!shiftId || !unitId || !description) {
@@ -56,17 +55,10 @@ export const createEvent = async (req, res) => {
       data: event
     });
 
-  } catch (error) {
-    console.error("CREATE EVENT ERROR:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
-  }
 };
 
 export const getEvents = async (req, res) => {
-  try {
+
     const {
       startDate,
       endDate,
@@ -110,11 +102,9 @@ export const getEvents = async (req, res) => {
         filter.createdAt.$lte = end;
       }
     }
-
     if (req.user.role === "operator") {
       filter.createdBy = req.user._id;
     }
-
     const events = await EventLog.find(filter)
       .populate("unit", "name")
       .populate("createdBy", "name role")
@@ -132,12 +122,4 @@ export const getEvents = async (req, res) => {
       pages: Math.ceil(total / limitNum),
       data: events
     });
-
-  } catch (error) {
-    console.error("GET EVENTS ERROR:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
-  }
 };

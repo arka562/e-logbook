@@ -10,6 +10,7 @@ import parameterRoutes from "./routes/parameterRoutes.js";
 import eventRoutes from "./routes/eventRoutes.js";
 import issueRoutes from "./routes/issueRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
+import { errorHandler } from "./middleware/errorMiddleware.js";
 
 dotenv.config();
 connectDB();
@@ -27,7 +28,7 @@ app.get("/api/health", (req, res) => {
     message: "E-Logbook Backend Running"
   });
 });
-
+app.use(errorHandler);
 app.use('/api/auth/v1', authRoutes);
 app.use('/api/auth/v2', testRoutes);
 app.use("/api/admin/v1", adminRoutes);

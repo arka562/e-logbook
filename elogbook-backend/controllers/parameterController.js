@@ -2,7 +2,6 @@ import ParameterTemplate from "../models/ParameterTemplate.model.js";
 import Plant from "../models/Plant.model.js";
 
 export const createParameterTemplate = async (req, res) => {
-  try {
     const { name, category, unit, designValue, plant } = req.body;
 
     if (!name || !category || !plant) {
@@ -47,18 +46,9 @@ export const createParameterTemplate = async (req, res) => {
       message: "Parameter template created successfully",
       data: template
     });
-
-  } catch (error) {
-    console.error("CREATE TEMPLATE ERROR:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
-  }
 };
 
 export const getTemplatesByCategory = async (req, res) => {
-  try {
     const { category, plant } = req.query;
 
     if (!category || !plant) {
@@ -78,12 +68,4 @@ export const getTemplatesByCategory = async (req, res) => {
       count: templates.length,
       data: templates
     });
-
-  } catch (error) {
-    console.error("GET TEMPLATE ERROR:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
-  }
 };

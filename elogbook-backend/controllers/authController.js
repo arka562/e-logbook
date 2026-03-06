@@ -10,7 +10,6 @@ const generateToken = (id) => {
 };
 
 export const registerUser = async (req, res) => {
-  try {
      console.log("Body received:", req.body); 
     const { name, email, password, role, department } = req.body;
 
@@ -41,13 +40,9 @@ export const registerUser = async (req, res) => {
       token: generateToken(user._id)
     });
 
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
 };
 
 export const loginUser = async (req, res) => {
-  try {
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -72,8 +67,4 @@ export const loginUser = async (req, res) => {
       department: user.department,
       token: generateToken(user._id)
     });
-
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
 };

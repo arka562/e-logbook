@@ -1,10 +1,12 @@
 import express from "express";
 import { createShift,getShifts,getShiftById,closeShift,deleteShift,submitShift,approveShift,lockShift } from "../controllers/shiftController.js";
 import { helper, roleAuthorization } from "../middleware/authMiddleware.js";
+import { validate } from "../middleware/validate.js";
+import { createShiftSchema } from "../validations/shiftValidations.js";
 
 const router = express.Router();
 
-router.post("/",helper,roleAuthorization("operator", "shift_incharge", "admin"),createShift);
+router.post("/",helper,roleAuthorization("operator", "shift_incharge", "admin"),validate(createShiftSchema),createShift);
 router.get("/",helper,getShifts);
 
 router.get("/:id",helper,getShiftById);

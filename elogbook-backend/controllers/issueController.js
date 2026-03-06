@@ -4,7 +4,6 @@ import Unit from "../models/Unit.model.js";
 import Department from "../models/Department.model.js";
 
 export const createIssue = async (req, res) => {
-  try {
     const { shiftId, unitId, equipment, description, department } = req.body;
 
     if (!shiftId || !unitId || !equipment || !description || !department) {
@@ -59,17 +58,8 @@ export const createIssue = async (req, res) => {
       message: "Issue created successfully",
       data: issue
     });
-
-  } catch (error) {
-    console.error("CREATE ISSUE ERROR:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
-  }
 };
 export const getIssues = async (req, res) => {
-  try {
     const {
       status,
       unit,
@@ -137,18 +127,9 @@ export const getIssues = async (req, res) => {
       pages: Math.ceil(total / limitNum),
       data: issues
     });
-
-  } catch (error) {
-    console.error("GET ISSUES ERROR:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
-  }
 };
 
 export const getIssuesByShift = async (req, res) => {
-  try {
     const { shiftId } = req.params;
     const { status, page = 1, limit = 10 } = req.query;
 
@@ -172,18 +153,9 @@ export const getIssuesByShift = async (req, res) => {
       page: Number(page),
       data: issues
     });
-
-  } catch (error) {
-    console.error("GET ISSUES ERROR:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
-  }
 };
 
 export const updateIssueStatus = async (req, res) => {
-  try {
     const { issueId } = req.params;
     const { status } = req.body;
 
@@ -253,19 +225,10 @@ export const updateIssueStatus = async (req, res) => {
       message: "Issue status updated successfully",
       data: issue
     });
-
-  } catch (error) {
-    console.error("UPDATE ISSUE ERROR:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
-  }
 };
 
 
 export const deleteIssue = async (req, res) => {
-  try {
     const { issueId } = req.params;
 
     const issue = await Issue.findById(issueId);
@@ -283,12 +246,4 @@ export const deleteIssue = async (req, res) => {
       success: true,
       message: "Issue deleted successfully"
     });
-
-  } catch (error) {
-    console.error("DELETE ISSUE ERROR:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
-  }
 };
