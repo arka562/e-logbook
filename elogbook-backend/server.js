@@ -11,6 +11,7 @@ import eventRoutes from "./routes/eventRoutes.js";
 import issueRoutes from "./routes/issueRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import { errorHandler } from "./middleware/errorMiddleware.js";
+import auditRoutes from "./routes/auditRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -37,6 +38,7 @@ app.use("/api/parameters/v1", parameterRoutes);
 app.use("/api/event/v1",eventRoutes);
 app.use("/api/issues/v1", issueRoutes);
 app.use("/api/dashboard/v1", dashboardRoutes);
+app.use("/api/audit/v1", auditRoutes);
 // MUST BE LAST
 // app.use((err, req, res, next) => {
 //   console.error("Server error:", err.stack);

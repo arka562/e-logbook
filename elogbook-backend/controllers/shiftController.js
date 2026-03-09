@@ -2,6 +2,7 @@ import Shift from "../models/Shift.model.js";
 import Plant from "../models/Plant.model.js";
 import Unit from "../models/Unit.model.js";
 import User from "../models/User.model.js";
+import { logAudit } from "../utils/auditLogger.js";
 
 export const createShift = async (req, res) => {
     const {
@@ -197,6 +198,16 @@ export const submitShift = async (req, res) => {
 
     await shift.save();
 
+    await logAudit({
+    action: "SUBMIT",
+    entity: "SHIFT",
+    entityId: shift._id,
+    userId: req.user._id,
+    description: `Shift ${shift.shiftType} submitted`,
+    userRole: req.user.role,
+    ipAddress: req.ip
+  });
+
     res.status(200).json({
       success: true,
       message: "Shift submitted successfully",
@@ -236,6 +247,16 @@ export const approveShift = async (req, res) => {
 
     await shift.save();
 
+    await logAudit({
+    action: "APPROVE",
+    entity: "SHIFT",
+    entityId: shift._id,
+    userId: req.user._id,
+    description: `Shift approved`,
+    userRole: req.user.role,
+    ipAddress: req.ip
+  });
+
     res.status(200).json({
       success: true,
       message: "Shift approved successfully",
@@ -274,6 +295,17 @@ export const lockShift = async (req, res) => {
     shift.lockedAt = new Date();
 
     await shift.save();
+
+    
+    await logAudit({
+    action: "LOCK",
+    entity: "SHIFT",
+    entityId: shift._id,
+    userId: req.user._id,
+    description: `Shift locked`,
+    userRole: req.user.role,
+    ipAddress: req.ip
+  });
 
     res.status(200).json({
       success: true,

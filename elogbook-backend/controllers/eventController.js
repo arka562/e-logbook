@@ -71,7 +71,7 @@ export const getEvents = async (req, res) => {
     const pageNum = Number(page) || 1;
     const limitNum = Number(limit) || 10;
 
-    let filter = { isDeleted: false };
+    let filter = {};
 
     if (unit) filter.unit = unit;
     if (plant) filter.plant = plant;
