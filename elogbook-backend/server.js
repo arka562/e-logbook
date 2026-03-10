@@ -31,16 +31,16 @@ app.get("/api/health", (req, res) => {
   });
 });
 app.use(errorHandler);
-app.use('/api/auth/v1', authRoutes);
-app.use('/api/auth/v2', testRoutes);
-app.use("/api/admin/v1", adminRoutes);
-app.use("/api/shifts/v1", shiftRoutes);
-app.use("/api/parameters/v1", parameterRoutes);
-app.use("/api/event/v1",eventRoutes);
-app.use("/api/issues/v1", issueRoutes);
-app.use("/api/dashboard/v1", dashboardRoutes);
-app.use("/api/audit/v1", auditRoutes);
-app.use("/api/reports/v1", reportRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/auth', testRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/shifts", shiftRoutes);
+app.use("/api/parameters", parameterRoutes);
+app.use("/api/event",eventRoutes);
+app.use("/api/issues", issueRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/audit", auditRoutes);
+app.use("/api/reports", reportRoutes);
 // MUST BE LAST
 // app.use((err, req, res, next) => {
 //   console.error("Server error:", err.stack);

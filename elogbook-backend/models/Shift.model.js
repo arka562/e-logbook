@@ -66,7 +66,6 @@ const shiftSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-
 const Shift = mongoose.model("Shift", shiftSchema);
 
 export default Shift;
