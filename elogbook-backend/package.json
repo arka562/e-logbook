@@ -19,7 +19,8 @@
     "express": "^4.19.2",
     "joi": "^18.0.2",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^7.6.3"
+    "mongoose": "^7.6.3",
+    "pdfkit": "^0.17.2"
   },
   "devDependencies": {
     "nodemon": "^1.0.2"
