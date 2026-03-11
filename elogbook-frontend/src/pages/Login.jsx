@@ -33,38 +33,83 @@ function Login() {
   };
 
   return (
-    <div style={{ padding: 50 }}>
-      <h2>E-Logbook Login</h2>
+    <div style={styles.container}>
+      <div style={styles.card}>
+        <h2 style={styles.title}>E-Logbook Login</h2>
 
-      <form onSubmit={handleLogin}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+        <form onSubmit={handleLogin} style={styles.form}>
+          <input
+            type="email"
+            placeholder="Email Address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            style={styles.input}
+            required
+          />
 
-        <br />
-        <br />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={styles.input}
+            required
+          />
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-
-        <br />
-        <br />
-
-        <button type="submit" disabled={loading}>
-          {loading ? "Logging in..." : "Login"}
-        </button>
-      </form>
+          <button type="submit" disabled={loading} style={styles.button}>
+            {loading ? "Logging in..." : "Login"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
+
+const styles = {
+  container: {
+    height: "100vh",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    background: "#f4f6f8",
+    fontFamily: "Arial, sans-serif",
+  },
+
+  card: {
+    background: "#fff",
+    padding: "40px",
+    borderRadius: "10px",
+    boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+    width: "350px",
+    textAlign: "center",
+  },
+
+  title: {
+    marginBottom: "25px",
+  },
+
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "15px",
+  },
+
+  input: {
+    padding: "12px",
+    borderRadius: "6px",
+    border: "1px solid #ccc",
+    fontSize: "14px",
+  },
+
+  button: {
+    padding: "12px",
+    borderRadius: "6px",
+    border: "none",
+    background: "#1976d2",
+    color: "#fff",
+    fontSize: "15px",
+    cursor: "pointer",
+  },
+};
 
 export default Login;

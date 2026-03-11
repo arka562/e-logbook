@@ -22,8 +22,8 @@ function Dashboard() {
     fetchDashboard();
   }, []);
 
-  if (loading) return <p>Loading dashboard...</p>;
-  if (error) return <p>{error}</p>;
+  if (loading) return <p style={styles.message}>Loading dashboard...</p>;
+  if (error) return <p style={styles.error}>{error}</p>;
 
   const shifts = data?.shifts || {};
   const issues = data?.issues || {};
@@ -31,25 +31,54 @@ function Dashboard() {
   const parameterEntries = data?.parameterEntries || {};
 
   return (
-    <div style={{ padding: 40 }}>
-      <h2>Plant Dashboard</h2>
+    <div style={styles.container}>
+      <h2 style={styles.title}>Plant Operations Dashboard</h2>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 220px)",
-          gap: "20px",
-        }}
-      >
-        <Card title="Total Shifts Today" value={shifts.today} />
+      <div style={styles.grid}>
+        <Card title="Shifts Today" value={shifts.today} />
         <Card title="Open Issues" value={issues.open} />
         <Card title="Issues In Progress" value={issues.wip} />
         <Card title="Closed Issues" value={issues.closed} />
         <Card title="Events Today" value={events.today} />
-        <Card title="Parameter Entries Today" value={parameterEntries.today} />
+        <Card title="Parameter Entries" value={parameterEntries.today} />
       </div>
+      <button onClick={() => (window.location.href = "/create-shift")}>
+        Create Shift
+      </button>
+      <button onClick={() => (window.location.href = "/shifts")}>
+        View Shifts
+      </button>
     </div>
   );
 }
+
+const styles = {
+  container: {
+    padding: "40px",
+    background: "#f4f6f8",
+    minHeight: "100vh",
+    fontFamily: "Arial, sans-serif",
+  },
+
+  title: {
+    marginBottom: "30px",
+  },
+
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+    gap: "20px",
+  },
+
+  message: {
+    padding: 40,
+    fontSize: 18,
+  },
+
+  error: {
+    color: "red",
+    padding: 40,
+  },
+};
 
 export default Dashboard;

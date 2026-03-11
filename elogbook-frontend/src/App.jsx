@@ -1,8 +1,9 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-// import Shifts from "./pages/Shifts";
+import Dashboard from "./pages/Dashboard.jsx";
+import CreateShift from "./pages/CreateShift.jsx";
+import ShiftList from "./pages/ShiftLists.jsx";
 // import Issues from "./pages/Issues";
 // import Events from "./pages/Events";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -22,16 +23,24 @@ function App() {
           }
         />
 
-        {/* <Route
+        <Route
+          path="/create-shift"
+          element={
+            <ProtectedRoute roles={["admin", "shift_incharge", "operator"]}>
+              <CreateShift />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/shifts"
           element={
             <ProtectedRoute>
-              <Shifts />
+              <ShiftList />
             </ProtectedRoute>
           }
         />
 
-        <Route
+        {/* <Route
           path="/issues"
           element={
             <ProtectedRoute>

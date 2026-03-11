@@ -5,6 +5,6 @@ import { helper } from "../middleware/authMiddleware.js";
 const router = express.Router();
 
 router.get("/shift/:shiftId",helper,getShiftReport);
-router.get("/shift/:shiftId/pdf",protect,downloadShiftReport);
+router.get("/shift/:shiftId/pdf",helper,downloadShiftReport);
 
 export default router;
