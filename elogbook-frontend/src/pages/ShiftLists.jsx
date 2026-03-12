@@ -116,6 +116,13 @@ function ShiftList() {
 
                 <td style={td}>
                   <button
+                    onClick={() =>
+                      window.open(`http://localhost:5000/api/shift/${s._id}`)
+                    }
+                  >
+                    Open
+                  </button>
+                  <button
                     style={{
                       padding: "6px 10px",
                       background: "#2e7d32",
