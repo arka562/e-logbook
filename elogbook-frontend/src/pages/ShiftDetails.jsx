@@ -6,13 +6,31 @@ function ShiftDetails() {
   const { id } = useParams();
 
   const [report, setReport] = useState(null);
+  const [parameters, setParameters] = useState([]);
+  const [values, setValues] = useState({});
   const [eventText, setEventText] = useState("");
   const [issueText, setIssueText] = useState("");
 
   const fetchReport = async () => {
     try {
       const res = await api.get(`/reports/shift/${id}`);
-      setReport(res.data.data);
+      const data = res.data.data;
+
+      setReport(data);
+
+      fetchParameters(data.shift.plant._id);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const fetchParameters = async (plantId) => {
+    try {
+      const res = await api.get(
+        `/parameters/templates?category=shift_parameters&plant=${plantId}`,
+      );
+
+      setParameters(res.data);
     } catch (error) {
       console.log(error);
     }
@@ -21,6 +39,33 @@ function ShiftDetails() {
   useEffect(() => {
     fetchReport();
   }, [id]);
+
+  const handleChange = (paramId, field, value) => {
+    setValues({
+      ...values,
+      [paramId]: {
+        ...values[paramId],
+        [field]: value,
+      },
+    });
+  };
+
+  const saveParameter = async (paramId) => {
+    try {
+      const v = values[paramId];
+
+      await api.post("/entries", {
+        shiftId: id,
+        parameterId: paramId,
+        unit1Value: v?.unit1 || "",
+        unit2Value: v?.unit2 || "",
+      });
+
+      alert("Parameter saved");
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const addEvent = async () => {
     if (!eventText.trim()) return;
@@ -63,8 +108,8 @@ function ShiftDetails() {
     <div style={styles.container}>
       <h2>Shift Logbook</h2>
 
-      {/* Shift Info */}
-      <div style={styles.infoCard}>
+      {/* SHIFT INFO */}
+      <div style={styles.card}>
         <p>
           <b>Plant:</b> {report.shift.plant.name}
         </p>
@@ -77,13 +122,13 @@ function ShiftDetails() {
       </div>
 
       {/* EVENTS */}
-      <div style={styles.section}>
+      <div style={styles.card}>
         <h3>Events</h3>
 
         <div style={styles.inputRow}>
           <input
-            placeholder="Event description"
             value={eventText}
+            placeholder="Event description"
             onChange={(e) => setEventText(e.target.value)}
             style={styles.input}
           />
@@ -113,13 +158,13 @@ function ShiftDetails() {
       </div>
 
       {/* ISSUES */}
-      <div style={styles.section}>
+      <div style={styles.card}>
         <h3>Issues</h3>
 
         <div style={styles.inputRow}>
           <input
-            placeholder="Issue description"
             value={issueText}
+            placeholder="Issue description"
             onChange={(e) => setIssueText(e.target.value)}
             style={styles.input}
           />
@@ -150,6 +195,29 @@ function ShiftDetails() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* SHIFT PARAMETERS */}
+      <div style={styles.card}>
+        <h3>Shift Parameters</h3>
+
+        {parameters.map((p) => (
+          <div key={p._id} style={styles.parameterRow}>
+            <b>{p.name}</b>
+
+            <input
+              placeholder="Unit 1"
+              onChange={(e) => handleChange(p._id, "unit1", e.target.value)}
+            />
+
+            <input
+              placeholder="Unit 2"
+              onChange={(e) => handleChange(p._id, "unit2", e.target.value)}
+            />
+
+            <button onClick={() => saveParameter(p._id)}>Save</button>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -186,25 +254,21 @@ const getStatusStyle = (status) => {
 const styles = {
   container: {
     padding: 40,
-    fontFamily: "Arial",
     background: "#f4f6f8",
     minHeight: "100vh",
   },
 
-  infoCard: {
+  card: {
     background: "#fff",
     padding: 20,
+    marginBottom: 25,
     borderRadius: 8,
-    marginBottom: 30,
     boxShadow: "0 3px 10px rgba(0,0,0,0.08)",
   },
 
-  section: {
-    background: "#fff",
-    padding: 20,
-    marginBottom: 30,
-    borderRadius: 8,
-    boxShadow: "0 3px 10px rgba(0,0,0,0.08)",
+  table: {
+    width: "100%",
+    borderCollapse: "collapse",
   },
 
   inputRow: {
@@ -216,8 +280,6 @@ const styles = {
   input: {
     flex: 1,
     padding: 8,
-    border: "1px solid #ccc",
-    borderRadius: 5,
   },
 
   btn: {
@@ -226,12 +288,13 @@ const styles = {
     color: "#fff",
     border: "none",
     borderRadius: 5,
-    cursor: "pointer",
   },
 
-  table: {
-    width: "100%",
-    borderCollapse: "collapse",
+  parameterRow: {
+    display: "flex",
+    gap: 10,
+    marginBottom: 10,
+    alignItems: "center",
   },
 };
 
