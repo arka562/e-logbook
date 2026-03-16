@@ -1,24 +1,28 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import Login from "./pages/Login";
+import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import CreateShift from "./pages/CreateShift.jsx";
 import ShiftList from "./pages/ShiftLists.jsx";
-// import Issues from "./pages/Issues";
-// import Events from "./pages/Events";
-import ProtectedRoute from "./components/ProtectedRoute";
+
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import MainLayout from "./pages/MainLayout.jsx";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public Route */}
         <Route path="/" element={<Login />} />
 
+        {/* Protected Routes */}
         <Route
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <MainLayout>
+                <Dashboard />
+              </MainLayout>
             </ProtectedRoute>
           }
         />
@@ -27,36 +31,23 @@ function App() {
           path="/create-shift"
           element={
             <ProtectedRoute roles={["admin", "shift_incharge", "operator"]}>
-              <CreateShift />
+              <MainLayout>
+                <CreateShift />
+              </MainLayout>
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/shifts"
           element={
             <ProtectedRoute>
-              <ShiftList />
+              <MainLayout>
+                <ShiftList />
+              </MainLayout>
             </ProtectedRoute>
           }
         />
-
-        {/* <Route
-          path="/issues"
-          element={
-            <ProtectedRoute>
-              <Issues />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/events"
-          element={
-            <ProtectedRoute>
-              <Events />
-            </ProtectedRoute>
-          }
-        /> */}
       </Routes>
     </BrowserRouter>
   );
