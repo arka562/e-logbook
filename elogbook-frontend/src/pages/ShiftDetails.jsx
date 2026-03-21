@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../api/axios";
 
+const role = localStorage.getItem("role");
+
 function ShiftDetails() {
   const { id } = useParams();
 

@@ -1,5 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 
+const role = localStorage.getItem("role");
+
 function MainLayout({ children }) {
   const navigate = useNavigate();
 

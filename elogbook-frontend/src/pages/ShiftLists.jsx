@@ -1,19 +1,36 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 
 function ShiftList() {
+
+  const navigate = useNavigate();
+
   const [shifts, setShifts] = useState([]);
-  const [date, setDate] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // filters
+  const [date, setDate] = useState("");
+  const [status, setStatus] = useState("");
+  const [unit, setUnit] = useState("");
 
   const fetchShifts = async () => {
     try {
+
       setLoading(true);
 
-      const url = date ? `/shifts?date=${date}` : "/shifts";
+      let query = [];
+
+      if (date) query.push(`date=${date}`);
+      if (status) query.push(`status=${status}`);
+      if (unit) query.push(`unit=${unit}`);
+
+      const url = `/shifts${query.length ? "?" + query.join("&") : ""}`;
 
       const res = await api.get(url);
+
       setShifts(res.data.data);
+
     } catch (error) {
       console.log(error);
     } finally {
@@ -26,52 +43,79 @@ function ShiftList() {
   }, []);
 
   const getStatusStyle = (status) => {
-    if (status === "OPEN") return { background: "#ffebee", color: "#c62828" };
 
-    if (status === "CLOSED") return { background: "#e8f5e9", color: "#2e7d32" };
+    if (status === "draft")
+      return { background: "#e3f2fd", color: "#1976d2" };
 
-    return { background: "#e3f2fd", color: "#1976d2" };
+    if (status === "submitted")
+      return { background: "#fff3e0", color: "#ef6c00" };
+
+    if (status === "approved")
+      return { background: "#e8f5e9", color: "#2e7d32" };
+
+    if (status === "locked")
+      return { background: "#eceff1", color: "#455a64" };
+
+    return {};
   };
 
   return (
     <div style={{ padding: 40 }}>
+
       <h2>Shift List</h2>
 
-      <div style={{ marginBottom: 20 }}>
+      {/* FILTER SECTION */}
+      <div style={{ marginBottom: 20, display: "flex", gap: "10px" }}>
+
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          style={{ padding: "8px", marginRight: "10px" }}
         />
 
-        <button
-          onClick={fetchShifts}
-          style={{
-            padding: "8px 15px",
-            background: "#1976d2",
-            color: "#fff",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-          }}
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
         >
-          Filter
+          <option value="">All Status</option>
+          <option value="draft">Draft</option>
+          <option value="submitted">Submitted</option>
+          <option value="approved">Approved</option>
+          <option value="locked">Locked</option>
+        </select>
+
+        <input
+          placeholder="Unit ID"
+          value={unit}
+          onChange={(e) => setUnit(e.target.value)}
+        />
+
+        <button onClick={fetchShifts} style={btnPrimary}>
+          Apply
         </button>
+
+        <button
+          onClick={() => {
+            setDate("");
+            setStatus("");
+            setUnit("");
+            fetchShifts();
+          }}
+          style={btnSecondary}
+        >
+          Reset
+        </button>
+
       </div>
 
+      {/* TABLE */}
       {loading ? (
         <p>Loading shifts...</p>
       ) : shifts.length === 0 ? (
         <p>No shifts found</p>
       ) : (
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            background: "#fff",
-          }}
-        >
+        <table style={tableStyle}>
+
           <thead>
             <tr style={{ background: "#f1f3f5" }}>
               <th style={th}>Date</th>
@@ -83,18 +127,14 @@ function ShiftList() {
           </thead>
 
           <tbody>
+
             {shifts.map((s) => (
-              <tr
-                key={s._id}
-                style={tr}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background = "#f5f5f5")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = "white")
-                }
-              >
-                <td style={td}>{new Date(s.date).toLocaleDateString()}</td>
+
+              <tr key={s._id} style={tr}>
+
+                <td style={td}>
+                  {new Date(s.date).toLocaleDateString()}
+                </td>
 
                 <td style={td}>{s.shiftType}</td>
 
@@ -115,39 +155,49 @@ function ShiftList() {
                 </td>
 
                 <td style={td}>
+
+                  {/* OPEN PAGE */}
                   <button
-                    onClick={() =>
-                      window.open(`http://localhost:5000/api/shift/${s._id}`)
-                    }
+                    onClick={() => navigate(`/shifts/${s._id}`)}
+                    style={btnPrimary}
                   >
                     Open
                   </button>
+
+                  {/* PDF */}
                   <button
-                    style={{
-                      padding: "6px 10px",
-                      background: "#2e7d32",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "5px",
-                      cursor: "pointer",
-                    }}
                     onClick={() =>
                       window.open(
-                        `http://localhost:5000/api/reports/shift/${s._id}/pdf`,
+                        `http://localhost:5000/api/reports/shift/${s._id}/pdf`
                       )
                     }
+                    style={btnSuccess}
                   >
-                    Download PDF
+                    PDF
                   </button>
+
                 </td>
+
               </tr>
+
             ))}
+
           </tbody>
+
         </table>
       )}
+
     </div>
   );
 }
+
+/* STYLES */
+
+const tableStyle = {
+  width: "100%",
+  borderCollapse: "collapse",
+  background: "#fff",
+};
 
 const th = {
   padding: "12px",
@@ -162,6 +212,34 @@ const td = {
 
 const tr = {
   transition: "0.2s",
+};
+
+const btnPrimary = {
+  padding: "6px 10px",
+  background: "#1976d2",
+  color: "white",
+  border: "none",
+  borderRadius: "5px",
+  cursor: "pointer",
+  marginRight: "5px",
+};
+
+const btnSecondary = {
+  padding: "6px 10px",
+  background: "#6c757d",
+  color: "white",
+  border: "none",
+  borderRadius: "5px",
+  cursor: "pointer",
+};
+
+const btnSuccess = {
+  padding: "6px 10px",
+  background: "#2e7d32",
+  color: "white",
+  border: "none",
+  borderRadius: "5px",
+  cursor: "pointer",
 };
 
 export default ShiftList;
