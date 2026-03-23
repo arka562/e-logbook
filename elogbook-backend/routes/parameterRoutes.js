@@ -1,7 +1,7 @@
 import express from "express";
 import {
   createParameterTemplate,
-  getTemplatesByCategory,
+  getTemplatesByCategory
 } from "../controllers/parameterController.js";
 
 import { helper,roleAuthorization } from "../middleware/authMiddleware.js";
@@ -20,5 +20,6 @@ router.get(
   helper,
   getTemplatesByCategory
 );
+
 
 export default router;

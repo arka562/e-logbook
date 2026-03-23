@@ -4,49 +4,33 @@ import Unit from "../models/Unit.model.js";
 import User from "../models/User.model.js";
 import { logAudit } from "../utils/auditLogger.js";
 
+/* ================= CREATE SHIFT ================= */
 export const createShift = async (req, res) => {
-    const {
-      date,
-      shiftType,
-      plant,
-      unit,
-      shiftInCharge,
-      engineers,
-    } = req.body;
+  try {
+    const { date, shiftType, plant, unit, shiftInCharge, engineers } = req.body;
 
     if (!date || !shiftType || !plant || !unit || !shiftInCharge) {
       return res.status(400).json({
         success: false,
-        message: "Date, shift type, plant, unit and shift in-charge are required"
+        message: "Required fields missing",
       });
     }
 
     const plantExists = await Plant.findById(plant);
     if (!plantExists) {
-      return res.status(404).json({
-        success: false,
-        message: "Plant not found"
-      });
+      return res.status(404).json({ success: false, message: "Plant not found" });
     }
 
     const unitExists = await Unit.findById(unit);
     if (!unitExists) {
-      return res.status(404).json({
-        success: false,
-        message: "Unit not found"
-      });
+      return res.status(404).json({ success: false, message: "Unit not found" });
     }
 
-    const existingShift = await Shift.findOne({
-      date,
-      unit,
-      shiftType
-    });
-
+    const existingShift = await Shift.findOne({ date, unit, shiftType });
     if (existingShift) {
       return res.status(400).json({
         success: false,
-        message: "Shift already created for this unit and shift type on this date"
+        message: "Shift already exists for this unit/date/type",
       });
     }
 
@@ -54,7 +38,7 @@ export const createShift = async (req, res) => {
     if (!inCharge) {
       return res.status(404).json({
         success: false,
-        message: "Shift In-Charge not found"
+        message: "Shift In-Charge not found",
       });
     }
 
@@ -64,17 +48,24 @@ export const createShift = async (req, res) => {
       plant,
       unit,
       shiftInCharge,
-      engineers
+      engineers,
+      status: "draft",
     });
 
     res.status(201).json({
       success: true,
       message: "Shift created successfully",
-      data: shift
+      data: shift,
     });
+  } catch (error) {
+    console.error("Create Shift Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 };
 
+/* ================= GET SHIFTS ================= */
 export const getShifts = async (req, res) => {
+  try {
     const { date, plant, unit, status, page = 1, limit = 10 } = req.query;
 
     let filter = {};
@@ -107,11 +98,17 @@ export const getShifts = async (req, res) => {
       success: true,
       total,
       page: Number(page),
-      data: shifts
+      data: shifts,
     });
+  } catch (error) {
+    console.error("Get Shifts Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 };
 
+/* ================= GET SHIFT BY ID ================= */
 export const getShiftById = async (req, res) => {
+  try {
     const shift = await Shift.findById(req.params.id)
       .populate("plant")
       .populate("unit")
@@ -121,74 +118,56 @@ export const getShiftById = async (req, res) => {
     if (!shift) {
       return res.status(404).json({
         success: false,
-        message: "Shift not found"
+        message: "Shift not found",
       });
     }
 
     res.status(200).json({
       success: true,
-      data: shift
+      data: shift,
     });
+  } catch (error) {
+    console.error("Get Shift By ID Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 };
 
-export const closeShift = async (req, res) => {
-    const shift = await Shift.findById(req.params.id);
-
-    if (!shift) {
-      return res.status(404).json({
-        success: false,
-        message: "Shift not found"
-      });
-    }
-
-    shift.status = "closed";
-    await shift.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Shift closed successfully",
-      data: shift
-    });
-};
-
+/* ================= DELETE SHIFT ================= */
 export const deleteShift = async (req, res) => {
+  try {
     const shift = await Shift.findByIdAndDelete(req.params.id);
 
     if (!shift) {
       return res.status(404).json({
         success: false,
-        message: "Shift not found"
+        message: "Shift not found",
       });
     }
 
     res.status(200).json({
       success: true,
-      message: "Shift deleted successfully"
+      message: "Shift deleted successfully",
     });
+  } catch (error) {
+    console.error("Delete Shift Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 };
 
+/* ================= SUBMIT SHIFT ================= */
 export const submitShift = async (req, res) => {
+  try {
     const { shiftId } = req.params;
     const shift = await Shift.findById(shiftId);
 
     if (!shift) {
-      return res.status(404).json({
-        success: false,
-        message: "Shift not found"
-      });
+      return res.status(404).json({ success: false, message: "Shift not found" });
     }
 
     if (shift.status !== "draft") {
       return res.status(400).json({
         success: false,
-        message: "Only draft shift can be submitted"
-      });
-    }
-
-    if (!["operator", "shift_incharge"].includes(req.user.role)) {
-      return res.status(403).json({
-        success: false,
-        message: "Not authorized to submit shift"
+        message: "Only draft shift can be submitted",
       });
     }
 
@@ -199,45 +178,40 @@ export const submitShift = async (req, res) => {
     await shift.save();
 
     await logAudit({
-    action: "SUBMIT",
-    entity: "SHIFT",
-    entityId: shift._id,
-    userId: req.user._id,
-    description: `Shift ${shift.shiftType} submitted`,
-    userRole: req.user.role,
-    ipAddress: req.ip
-  });
+      action: "SUBMIT",
+      entity: "SHIFT",
+      entityId: shift._id,
+      userId: req.user._id,
+      description: `Shift submitted`,
+      userRole: req.user.role,
+      ipAddress: req.ip,
+    });
 
     res.status(200).json({
       success: true,
       message: "Shift submitted successfully",
-      data: shift
+      data: shift,
     });
+  } catch (error) {
+    console.error("Submit Shift Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 };
 
+/* ================= APPROVE SHIFT ================= */
 export const approveShift = async (req, res) => {
-
+  try {
     const { shiftId } = req.params;
     const shift = await Shift.findById(shiftId);
 
     if (!shift) {
-      return res.status(404).json({
-        success: false,
-        message: "Shift not found"
-      });
+      return res.status(404).json({ success: false, message: "Shift not found" });
     }
 
     if (shift.status !== "submitted") {
       return res.status(400).json({
         success: false,
-        message: "Only submitted shift can be approved"
-      });
-    }
-
-    if (!["shift_incharge", "hod", "admin"].includes(req.user.role)) {
-      return res.status(403).json({
-        success: false,
-        message: "Not authorized to approve shift"
+        message: "Only submitted shift can be approved",
       });
     }
 
@@ -248,45 +222,40 @@ export const approveShift = async (req, res) => {
     await shift.save();
 
     await logAudit({
-    action: "APPROVE",
-    entity: "SHIFT",
-    entityId: shift._id,
-    userId: req.user._id,
-    description: `Shift approved`,
-    userRole: req.user.role,
-    ipAddress: req.ip
-  });
+      action: "APPROVE",
+      entity: "SHIFT",
+      entityId: shift._id,
+      userId: req.user._id,
+      description: `Shift approved`,
+      userRole: req.user.role,
+      ipAddress: req.ip,
+    });
 
     res.status(200).json({
       success: true,
       message: "Shift approved successfully",
-      data: shift
+      data: shift,
     });
+  } catch (error) {
+    console.error("Approve Shift Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 };
 
+/* ================= LOCK SHIFT ================= */
 export const lockShift = async (req, res) => {
+  try {
     const { shiftId } = req.params;
-
     const shift = await Shift.findById(shiftId);
 
     if (!shift) {
-      return res.status(404).json({
-        success: false,
-        message: "Shift not found"
-      });
+      return res.status(404).json({ success: false, message: "Shift not found" });
     }
 
     if (shift.status !== "approved") {
       return res.status(400).json({
         success: false,
-        message: "Only approved shift can be locked"
-      });
-    }
-
-    if (!["hod", "admin"].includes(req.user.role)) {
-      return res.status(403).json({
-        success: false,
-        message: "Not authorized to lock shift"
+        message: "Only approved shift can be locked",
       });
     }
 
@@ -296,20 +265,23 @@ export const lockShift = async (req, res) => {
 
     await shift.save();
 
-    
     await logAudit({
-    action: "LOCK",
-    entity: "SHIFT",
-    entityId: shift._id,
-    userId: req.user._id,
-    description: `Shift locked`,
-    userRole: req.user.role,
-    ipAddress: req.ip
-  });
+      action: "LOCK",
+      entity: "SHIFT",
+      entityId: shift._id,
+      userId: req.user._id,
+      description: `Shift locked`,
+      userRole: req.user.role,
+      ipAddress: req.ip,
+    });
 
     res.status(200).json({
       success: true,
       message: "Shift locked successfully",
-      data: shift
+      data: shift,
     });
+  } catch (error) {
+    console.error("Lock Shift Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 };

@@ -1,6 +1,8 @@
 import ParameterTemplate from "../models/ParameterTemplate.model.js";
 import Plant from "../models/Plant.model.js";
 
+
+
 export const createParameterTemplate = async (req, res) => {
     const { name, category, unit, designValue, plant } = req.body;
 

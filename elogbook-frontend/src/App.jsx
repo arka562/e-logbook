@@ -4,9 +4,10 @@ import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import CreateShift from "./pages/CreateShift.jsx";
 import ShiftList from "./pages/ShiftLists.jsx";
-
+import ShiftDetails from "./pages/ShiftDetails";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import MainLayout from "./pages/MainLayout.jsx";
+import ReportView from "./pages/ReportView";
 
 function App() {
   return (
@@ -48,6 +49,28 @@ function App() {
             </ProtectedRoute>
           }
         />
+     
+
+<Route
+  path="/shifts/:id"
+  element={
+    <ProtectedRoute>
+      <MainLayout>
+        <ShiftDetails />
+      </MainLayout>
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/report/:id"
+  element={
+    <ProtectedRoute>
+      <MainLayout>
+        <ReportView/>
+      </MainLayout>
+    </ProtectedRoute>
+  }
+/>
       </Routes>
     </BrowserRouter>
   );

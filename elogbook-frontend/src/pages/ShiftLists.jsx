@@ -3,20 +3,19 @@ import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 
 function ShiftList() {
-
   const navigate = useNavigate();
+  const role = localStorage.getItem("role");
 
   const [shifts, setShifts] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // filters
   const [date, setDate] = useState("");
   const [status, setStatus] = useState("");
   const [unit, setUnit] = useState("");
 
+  /* ================= FETCH SHIFTS ================= */
   const fetchShifts = async () => {
     try {
-
       setLoading(true);
 
       let query = [];
@@ -30,9 +29,9 @@ function ShiftList() {
       const res = await api.get(url);
 
       setShifts(res.data.data);
-
     } catch (error) {
-      console.log(error);
+      console.error(error);
+      alert("Failed to fetch shifts");
     } finally {
       setLoading(false);
     }
@@ -42,8 +41,44 @@ function ShiftList() {
     fetchShifts();
   }, []);
 
-  const getStatusStyle = (status) => {
+  /* ================= ACTION HANDLERS ================= */
 
+  const handleSubmit = async (id) => {
+    try {
+      await api.put(`/shifts/submit/${id}`);
+      alert("Shift submitted");
+      fetchShifts();
+    } catch (err) {
+      console.error(err);
+      alert("Submit failed");
+    }
+  };
+
+  const handleApprove = async (id) => {
+    try {
+      await api.put(`/shifts/approve/${id}`);
+      alert("Shift approved");
+      fetchShifts();
+    } catch (err) {
+      console.error(err);
+      alert("Approve failed");
+    }
+  };
+
+  const handleLock = async (id) => {
+    try {
+      await api.put(`/shifts/lock/${id}`);
+      alert("Shift locked");
+      fetchShifts();
+    } catch (err) {
+      console.error(err);
+      alert("Lock failed");
+    }
+  };
+
+  /* ================= STYLES ================= */
+
+  const getStatusStyle = (status) => {
     if (status === "draft")
       return { background: "#e3f2fd", color: "#1976d2" };
 
@@ -59,14 +94,14 @@ function ShiftList() {
     return {};
   };
 
+  /* ================= UI ================= */
+
   return (
     <div style={{ padding: 40 }}>
-
       <h2>Shift List</h2>
 
-      {/* FILTER SECTION */}
+      {/* FILTER */}
       <div style={{ marginBottom: 20, display: "flex", gap: "10px" }}>
-
         <input
           type="date"
           value={date}
@@ -105,7 +140,6 @@ function ShiftList() {
         >
           Reset
         </button>
-
       </div>
 
       {/* TABLE */}
@@ -115,7 +149,6 @@ function ShiftList() {
         <p>No shifts found</p>
       ) : (
         <table style={tableStyle}>
-
           <thead>
             <tr style={{ background: "#f1f3f5" }}>
               <th style={th}>Date</th>
@@ -127,18 +160,26 @@ function ShiftList() {
           </thead>
 
           <tbody>
-
             {shifts.map((s) => (
-
-              <tr key={s._id} style={tr}>
-
+              <tr
+                key={s._id}
+                style={tr}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = "#f9fafb")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.background = "white")
+                }
+              >
                 <td style={td}>
-                  {new Date(s.date).toLocaleDateString()}
+                  {s.date
+                    ? new Date(s.date).toLocaleDateString()
+                    : "N/A"}
                 </td>
 
-                <td style={td}>{s.shiftType}</td>
+                <td style={td}>{s.shiftType || "N/A"}</td>
 
-                <td style={td}>{s.unit?.name}</td>
+                <td style={td}>{s.unit?.name || "N/A"}</td>
 
                 <td style={td}>
                   <span
@@ -150,18 +191,26 @@ function ShiftList() {
                       fontWeight: "bold",
                     }}
                   >
-                    {s.status}
+                    {s.status?.toUpperCase()}
                   </span>
                 </td>
 
                 <td style={td}>
-
-                  {/* OPEN PAGE */}
+                  {/* OPEN */}
                   <button
                     onClick={() => navigate(`/shifts/${s._id}`)}
                     style={btnPrimary}
                   >
                     Open
+                  </button>
+
+                  {/* REPORT */}
+                  <button
+                    onClick={() => navigate(`/report/${s._id}`)}
+                    style={btnSecondary}
+                    disabled={s.status === "draft"}
+                  >
+                    Report
                   </button>
 
                   {/* PDF */}
@@ -172,26 +221,52 @@ function ShiftList() {
                       )
                     }
                     style={btnSuccess}
+                    disabled={s.status === "draft"}
                   >
                     PDF
                   </button>
 
+                  {/* ROLE-BASED ACTIONS */}
+
+                  {role === "operator" && s.status === "draft" && (
+                    <button
+                      onClick={() => handleSubmit(s._id)}
+                      style={btnSuccess}
+                    >
+                      Submit
+                    </button>
+                  )}
+
+                  {role === "shift_incharge" &&
+                    s.status === "submitted" && (
+                      <button
+                        onClick={() => handleApprove(s._id)}
+                        style={btnSuccess}
+                      >
+                        Approve
+                      </button>
+                    )}
+
+                  {(role === "hod" || role === "admin") &&
+                    s.status === "approved" && (
+                      <button
+                        onClick={() => handleLock(s._id)}
+                        style={btnSuccess}
+                      >
+                        Lock
+                      </button>
+                    )}
                 </td>
-
               </tr>
-
             ))}
-
           </tbody>
-
         </table>
       )}
-
     </div>
   );
 }
 
-/* STYLES */
+/* ================= STYLES ================= */
 
 const tableStyle = {
   width: "100%",
@@ -231,6 +306,7 @@ const btnSecondary = {
   border: "none",
   borderRadius: "5px",
   cursor: "pointer",
+  marginRight: "5px",
 };
 
 const btnSuccess = {
@@ -240,6 +316,7 @@ const btnSuccess = {
   border: "none",
   borderRadius: "5px",
   cursor: "pointer",
+  marginRight: "5px",
 };
 
 export default ShiftList;

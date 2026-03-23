@@ -4,6 +4,7 @@ import EventLog from "../models/EventLog.model.js";
 import Issue from "../models/Issue.model.js";
 import { generateShiftPDF } from "../utils/pdfGenerator.js";
 
+/* ================= GET SHIFT REPORT ================= */
 export const getShiftReport = async (req, res) => {
   try {
     const { shiftId } = req.params;
@@ -15,6 +16,7 @@ export const getShiftReport = async (req, res) => {
 
     if (!shift) {
       return res.status(404).json({
+        success: false,
         message: "Shift not found",
       });
     }
@@ -31,18 +33,28 @@ export const getShiftReport = async (req, res) => {
       .populate("createdBy", "name")
       .populate("resolvedBy", "name");
 
-    res.json({
-      shift,
-      parameters,
-      events,
-      issues,
+    // ✅ FIXED RESPONSE STRUCTURE
+    res.status(200).json({
+      success: true,
+      data: {
+        shift,
+        parameters,
+        events,
+        issues,
+      },
     });
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("GET SHIFT REPORT ERROR:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
 
+/* ================= DOWNLOAD PDF ================= */
 export const downloadShiftReport = async (req, res) => {
   try {
     const { shiftId } = req.params;
@@ -58,6 +70,7 @@ export const downloadShiftReport = async (req, res) => {
         message: "Shift not found",
       });
     }
+
     const [parameters, events, issues] = await Promise.all([
       ParameterEntry.find({ shift: shiftId })
         .populate("parameter")

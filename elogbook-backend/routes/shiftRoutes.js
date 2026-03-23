@@ -1,5 +1,5 @@
 import express from "express";
-import { createShift,getShifts,getShiftById,closeShift,deleteShift,submitShift,approveShift,lockShift } from "../controllers/shiftController.js";
+import { createShift,getShifts,getShiftById,deleteShift,submitShift,approveShift,lockShift } from "../controllers/shiftController.js";
 import { helper, roleAuthorization } from "../middleware/authMiddleware.js";
 import { validate } from "../middleware/validate.js";
 import { createShiftSchema } from "../validations/shiftValidations.js";
@@ -11,7 +11,7 @@ router.get("/",helper,getShifts);
 
 router.get("/:id",helper,getShiftById);
 
-router.patch("/:id/close",helper,roleAuthorization("admin", "shift_incharge"),closeShift);
+// router.patch("/:id/close",helper,roleAuthorization("admin", "shift_incharge"),closeShift);
 
 router.delete("/:id",helper,roleAuthorization("admin"),deleteShift);
 

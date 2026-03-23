@@ -13,6 +13,7 @@ import dashboardRoutes from "./routes/dashboardRoutes.js";
 import { errorHandler } from "./middleware/errorMiddleware.js";
 import auditRoutes from "./routes/auditRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
+import entryRoute from "./routes/entryRoutes.js"
 
 dotenv.config();
 connectDB();
@@ -41,6 +42,7 @@ app.use("/api/issues", issueRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/audit", auditRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/entries",entryRoute);
 // MUST BE LAST
 // app.use((err, req, res, next) => {
 //   console.error("Server error:", err.stack);
