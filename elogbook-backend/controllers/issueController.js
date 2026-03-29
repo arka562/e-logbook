@@ -3,7 +3,10 @@ import Shift from "../models/Shift.model.js";
 import Unit from "../models/Unit.model.js";
 import Department from "../models/Department.model.js";
 
+
+// ✅ CREATE ISSUE
 export const createIssue = async (req, res) => {
+  try {
     const { shiftId, unitId, equipment, description, department } = req.body;
 
     if (!shiftId || !unitId || !equipment || !description || !department) {
@@ -15,33 +18,24 @@ export const createIssue = async (req, res) => {
 
     const shift = await Shift.findById(shiftId);
     if (!shift) {
-      return res.status(404).json({
-        success: false,
-        message: "Shift not found"
-      });
+      return res.status(404).json({ success: false, message: "Shift not found" });
     }
 
     if (shift.status === "locked") {
       return res.status(400).json({
         success: false,
-        message: "Shift is locked. Cannot create issue."
+        message: "Shift is locked"
       });
     }
 
     const unit = await Unit.findById(unitId);
     if (!unit) {
-      return res.status(404).json({
-        success: false,
-        message: "Unit not found"
-      });
+      return res.status(404).json({ success: false, message: "Unit not found" });
     }
 
     const dept = await Department.findById(department);
     if (!dept) {
-      return res.status(404).json({
-        success: false,
-        message: "Department not found"
-      });
+      return res.status(404).json({ success: false, message: "Department not found" });
     }
 
     const issue = await Issue.create({
@@ -58,12 +52,19 @@ export const createIssue = async (req, res) => {
       message: "Issue created successfully",
       data: issue
     });
+
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
+
+
+// ✅ GET ALL ISSUES
 export const getIssues = async (req, res) => {
+  try {
     const {
       status,
       unit,
-      plant,
       startDate,
       endDate,
       page = 1,
@@ -77,46 +78,31 @@ export const getIssues = async (req, res) => {
 
     if (status) filter.status = status;
     if (unit) filter.unit = unit;
-    if (plant) filter.plant = plant;
 
     if (startDate || endDate) {
       filter.createdAt = {};
 
-      if (startDate) {
-        const start = new Date(startDate);
-        if (isNaN(start.getTime())) {
-          return res.status(400).json({
-            success: false,
-            message: "Invalid startDate"
-          });
-        }
-        filter.createdAt.$gte = start;
-      }
+      if (startDate) filter.createdAt.$gte = new Date(startDate);
 
       if (endDate) {
         const end = new Date(endDate);
-        if (isNaN(end.getTime())) {
-          return res.status(400).json({
-            success: false,
-            message: "Invalid endDate"
-          });
-        }
         end.setHours(23, 59, 59, 999);
         filter.createdAt.$lte = end;
       }
     }
+
     if (req.user.role === "operator") {
       filter.createdBy = req.user._id;
     }
 
     const issues = await Issue.find(filter)
       .populate("unit", "name")
+      .populate("department", "name")
       .populate("createdBy", "name role")
       .populate("resolvedBy", "name role")
       .sort({ createdAt: -1 })
       .skip((pageNum - 1) * limitNum)
-      .limit(limitNum)
-      .lean();
+      .limit(limitNum);
 
     const total = await Issue.countDocuments(filter);
 
@@ -124,38 +110,54 @@ export const getIssues = async (req, res) => {
       success: true,
       total,
       page: pageNum,
-      pages: Math.ceil(total / limitNum),
       data: issues
     });
+
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
 
+
+// ✅ GET ISSUES BY SHIFT
 export const getIssuesByShift = async (req, res) => {
+  try {
     const { shiftId } = req.params;
     const { status, page = 1, limit = 10 } = req.query;
+
+    const pageNum = Number(page) || 1;
+    const limitNum = Number(limit) || 10;
 
     const filter = { shift: shiftId };
     if (status) filter.status = status;
 
     const issues = await Issue.find(filter)
-      .populate("createdBy", "name role")
-      .populate("resolvedBy", "name role")
       .populate("unit", "name")
       .populate("department", "name")
+      .populate("createdBy", "name role")
+      .populate("resolvedBy", "name role")
       .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(Number(limit));
+      .skip((pageNum - 1) * limitNum)
+      .limit(limitNum);
 
     const total = await Issue.countDocuments(filter);
 
     res.status(200).json({
       success: true,
       total,
-      page: Number(page),
+      page: pageNum,
       data: issues
     });
+
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
 
+
+// ✅ UPDATE ISSUE STATUS
 export const updateIssueStatus = async (req, res) => {
+  try {
     const { issueId } = req.params;
     const { status } = req.body;
 
@@ -164,7 +166,7 @@ export const updateIssueStatus = async (req, res) => {
     if (!validStatuses.includes(status)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid status value"
+        message: "Invalid status"
       });
     }
 
@@ -207,7 +209,7 @@ export const updateIssueStatus = async (req, res) => {
       } else {
         return res.status(403).json({
           success: false,
-          message: "Only Admin or HOD can directly close an open issue"
+          message: "Only Admin or HOD can close directly"
         });
       }
     }
@@ -222,13 +224,19 @@ export const updateIssueStatus = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Issue status updated successfully",
+      message: "Issue status updated",
       data: issue
     });
+
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
 
 
+// ✅ DELETE ISSUE (HARD DELETE)
 export const deleteIssue = async (req, res) => {
+  try {
     const { issueId } = req.params;
 
     const issue = await Issue.findById(issueId);
@@ -240,10 +248,14 @@ export const deleteIssue = async (req, res) => {
       });
     }
 
-    await issue.save();
+    await issue.deleteOne();
 
     res.status(200).json({
       success: true,
       message: "Issue deleted successfully"
     });
+
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };

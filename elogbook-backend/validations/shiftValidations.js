@@ -7,9 +7,6 @@ export const createShiftSchema = Joi.object({
   unit: Joi.string().required(),
   shiftInCharge: Joi.string().required(),
   engineers: Joi.array().items(
-    Joi.object({
-      name: Joi.string().required(),
-      role: Joi.string().required(),
-    })
-  ),
+  Joi.string().required()
+)
 });

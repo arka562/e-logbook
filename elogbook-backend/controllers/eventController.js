@@ -35,12 +35,7 @@ export const createEvent = async (req, res) => {
       });
     }
 
-    if (unit._id.toString() !== shift.unit.toString()) {
-      return res.status(400).json({
-        success: false,
-        message: "Unit does not belong to this shift"
-      });
-    }
+   
 
     const event = await EventLog.create({
       shift: shiftId,
