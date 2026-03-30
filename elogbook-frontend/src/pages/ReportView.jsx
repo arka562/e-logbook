@@ -114,11 +114,28 @@ function ReportView() {
       {/* PDF */}
       <button
         style={styles.btn}
-        onClick={() =>
-          window.open(
-            `http://localhost:5000/api/reports/shift/${id}/pdf`
-          )
-        }
+        onClick={async () => {
+  try {
+    const res = await api.get(`/reports/shift/${id}/pdf`, {
+      responseType: "blob",
+    });
+
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.setAttribute("download", `shift_${id}.pdf`);
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+  } catch (err) {
+    console.error(err);
+    alert("Failed to download PDF");
+  }
+}}
+        
       >
         Download PDF
       </button>
