@@ -76,6 +76,28 @@ function ShiftList() {
     }
   };
 
+  const handleDownloadPDF = async (id) => {
+  try {
+    const res = await api.get(`/reports/shift/${id}/pdf`, {
+      responseType: "blob",
+    });
+
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "shift-report.pdf");
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+  } catch (error) {
+    console.error(error);
+    alert("Failed to download PDF");
+  }
+};
+
   /* ================= STYLES ================= */
 
   const getStatusStyle = (status) => {
@@ -213,19 +235,13 @@ function ShiftList() {
                     Report
                   </button>
 
-                  {/* PDF */}
                   <button
-                    onClick={() =>
-                      window.open(
-                        `http://localhost:5000/api/reports/shift/${s._id}/pdf`
-                      )
-                    }
-                    style={btnSuccess}
-                    disabled={s.status === "draft"}
-                  >
-                    PDF
-                  </button>
-
+  onClick={() => handleDownloadPDF(s._id)}
+  style={btnSuccess}
+  disabled={s.status === "draft"}
+>
+  PDF
+</button>
                   {/* ROLE-BASED ACTIONS */}
 
                   {role === "operator" && s.status === "draft" && (

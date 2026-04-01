@@ -129,7 +129,6 @@ function ReportView() {
     document.body.appendChild(link);
     link.click();
     link.remove();
-
   } catch (err) {
     console.error(err);
     alert("Failed to download PDF");

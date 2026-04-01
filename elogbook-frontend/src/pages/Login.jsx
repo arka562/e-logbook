@@ -61,6 +61,18 @@ function Login() {
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
+
+        {/* 🔥 NEW PART */}
+        <p style={{ marginTop: "15px" }}>
+          New user?{" "}
+          <span
+            style={styles.link}
+            onClick={() => navigate("/register")}
+          >
+            Register here
+          </span>
+        </p>
+
       </div>
     </div>
   );
@@ -75,7 +87,6 @@ const styles = {
     background: "#f4f6f8",
     fontFamily: "Arial, sans-serif",
   },
-
   card: {
     background: "#fff",
     padding: "40px",
@@ -84,32 +95,31 @@ const styles = {
     width: "350px",
     textAlign: "center",
   },
-
   title: {
     marginBottom: "25px",
   },
-
   form: {
     display: "flex",
     flexDirection: "column",
     gap: "15px",
   },
-
   input: {
     padding: "12px",
     borderRadius: "6px",
     border: "1px solid #ccc",
-    fontSize: "14px",
   },
-
   button: {
     padding: "12px",
     borderRadius: "6px",
     border: "none",
     background: "#1976d2",
     color: "#fff",
-    fontSize: "15px",
     cursor: "pointer",
+  },
+  link: {
+    color: "#1976d2",
+    cursor: "pointer",
+    fontWeight: "bold",
   },
 };
 

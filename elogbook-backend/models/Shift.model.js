@@ -27,11 +27,11 @@ const shiftSchema = new mongoose.Schema(
       required: true
     },
     engineers: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
-      }
-    ],
+  {
+    name: String,
+    role: String
+  }
+],
     status: {
       type: String,
       enum: ["draft", "submitted", "approved", "locked", "closed"],

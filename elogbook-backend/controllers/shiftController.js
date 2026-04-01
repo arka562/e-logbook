@@ -7,9 +7,9 @@ import { logAudit } from "../utils/auditLogger.js";
 /* ================= CREATE SHIFT ================= */
 export const createShift = async (req, res) => {
   try {
-    const { date, shiftType, plant, unit, shiftInCharge, engineers } = req.body;
+    const { date, shiftType, plant, unit, engineers } = req.body;
 
-    if (!date || !shiftType || !plant || !unit || !shiftInCharge) {
+    if (!date || !shiftType || !plant || !unit) {
       return res.status(400).json({
         success: false,
         message: "Required fields missing",
@@ -34,13 +34,8 @@ export const createShift = async (req, res) => {
       });
     }
 
-    const inCharge = await User.findById(shiftInCharge);
-    if (!inCharge) {
-      return res.status(404).json({
-        success: false,
-        message: "Shift In-Charge not found",
-      });
-    }
+    // ✅ take user from token
+    const shiftInCharge = req.user._id;
 
     const shift = await Shift.create({
       date,
@@ -48,7 +43,7 @@ export const createShift = async (req, res) => {
       plant,
       unit,
       shiftInCharge,
-      engineers,
+      engineers: engineers || [], // ✅ now works with name/role
       status: "draft",
     });
 
@@ -57,6 +52,7 @@ export const createShift = async (req, res) => {
       message: "Shift created successfully",
       data: shift,
     });
+
   } catch (error) {
     console.error("Create Shift Error:", error);
     res.status(500).json({ success: false, message: "Server error" });
