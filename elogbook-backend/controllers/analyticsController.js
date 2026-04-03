@@ -1,4 +1,5 @@
 import ParameterEntry from "../models/ParameterEntry.mode.js";
+import ParameterTemplate from "../models/ParameterTemplate.model.js";
 import Issue from "../models/Issue.model.js";
 import mongoose from "mongoose";
 
@@ -285,6 +286,26 @@ export const getIssueStats = async (req, res) => {
       success: false,
       message: "Internal Server Error",
       error: error.message,
+    });
+  }
+};
+
+// GET: All Parameters
+export const getParameters = async (req, res) => {
+  try {
+    const params = await ParameterTemplate.find()
+      .select("name unit")
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      data: params,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
     });
   }
 };

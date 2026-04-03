@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../api/axios";
 
-const role = localStorage.getItem("role");
-
 function ShiftDetails() {
   const { id } = useParams();
 
@@ -12,8 +10,10 @@ function ShiftDetails() {
   const [values, setValues] = useState({});
   const [eventText, setEventText] = useState("");
   const [issueText, setIssueText] = useState("");
+  const [departments, setDepartments] = useState([]);
+  const [selectedDepartment, setSelectedDepartment] = useState("");
 
-  /* ================= FETCH REPORT ================= */
+  // ================= FETCH REPORT =================
   const fetchReport = async () => {
     try {
       const res = await api.get(`/reports/shift/${id}`);
@@ -31,31 +31,31 @@ function ShiftDetails() {
   };
 
   const fetchParameters = async (plantId) => {
-  try {
-    const res = await api.get(
-      `/parameters/templates?category=shift_parameters&plant=${plantId}`
-    );
-
-    console.log("PARAMETERS API:", res.data);
-
-    // ✅ SAFE EXTRACTION
-    if (res.data?.data && Array.isArray(res.data.data)) {
-      setParameters(res.data.data);
-    } else {
+    try {
+      const res = await api.get(
+        `/parameters/templates?category=shift_parameters&plant=${plantId}`
+      );
+      setParameters(res.data?.data || []);
+    } catch (error) {
+      console.error(error);
       setParameters([]);
     }
+  };
 
-  } catch (error) {
-    console.error(error);
-    setParameters([]);
-  }
-};
+  const fetchDepartments = async () => {
+    try {
+      const res = await api.get("/admin/departments");
+      setDepartments(res.data.data || []);
+    } catch (err) {
+      console.error("Dept fetch error", err);
+    }
+  };
 
-  useEffect(() => {
+  useEffect(() => { 
     fetchReport();
+    fetchDepartments();
   }, [id]);
 
-  /* ================= STATE HELPERS ================= */
   const isLocked = report?.shift?.status === "locked";
 
   const handleChange = (paramId, field, value) => {
@@ -68,7 +68,7 @@ function ShiftDetails() {
     });
   };
 
-  /* ================= PARAM SAVE ================= */
+  // ================= SAVE PARAM =================
   const saveParameter = async (paramId) => {
     try {
       const v = values[paramId];
@@ -87,14 +87,22 @@ function ShiftDetails() {
     }
   };
 
-  /* ================= EVENTS ================= */
+  // ================= ADD EVENT =================
   const addEvent = async () => {
-    if (!eventText.trim()) return;
+    if (!eventText.trim()) {
+      alert("Please enter event description");
+      return;
+    }
+
+    if (!report?.shift?.unit?._id) {
+      alert("Unit not available");
+      return;
+    }
 
     try {
-      await api.post("/events", {
-        shiftId: id,
-        unitId: report.shift?.unit?._id,
+      await api.post("/event", {
+        shiftId: report.shift._id,
+        unitId: report.shift.unit._id,
         description: eventText,
       });
 
@@ -102,29 +110,62 @@ function ShiftDetails() {
       fetchReport();
     } catch (error) {
       console.error(error);
+      alert(error?.response?.data?.message || "Failed to add event");
     }
   };
 
-  /* ================= ISSUES ================= */
+  // ================= ADD ISSUE =================
   const addIssue = async () => {
-    if (!issueText.trim()) return;
+    if (!issueText.trim()) {
+      alert("Please enter issue description");
+      return;
+    }
+
+    if (!selectedDepartment) {
+      alert("Please select department");
+      return;
+    }
+
+    if (!report?.shift?.unit?._id) {
+      alert("Unit not available");
+      return;
+    }
 
     try {
       await api.post("/issues", {
-        shiftId: id,
-        unitId: report.shift?.unit?._id,
+        shiftId: report.shift._id,
+        unitId: report.shift.unit._id,
         equipment: "Equipment",
         description: issueText,
+        department: selectedDepartment,
       });
 
       setIssueText("");
+      setSelectedDepartment("");
       fetchReport();
     } catch (error) {
       console.error(error);
+      alert(error?.response?.data?.message || "Failed to add issue");
     }
   };
 
-  /* ================= LOADING ================= */
+  const updateIssueStatus = async (issueId, newStatus) => {
+  try {
+    await api.patch(`/issues/${issueId}/status`, {
+      status: newStatus,
+    });
+
+    fetchReport(); // refresh UI
+
+  } catch (error) {
+    console.error(error);
+
+    alert(
+      error?.response?.data?.message ||
+      "Failed to update issue status"
+    );
+  }
+};
   if (!report) return <p>Loading...</p>;
 
   return (
@@ -133,18 +174,10 @@ function ShiftDetails() {
 
       {/* SHIFT INFO */}
       <div style={styles.card}>
-        <p>
-          <b>Plant:</b> {report.shift?.plant?.name || "N/A"}
-        </p>
-        <p>
-          <b>Unit:</b> {report.shift?.unit?.name || "N/A"}
-        </p>
-        <p>
-          <b>Shift:</b> {report.shift?.shiftType || "N/A"}
-        </p>
-        <p>
-          <b>Status:</b> {report.shift?.status?.toUpperCase()}
-        </p>
+        <p><b>Plant:</b> {report.shift?.plant?.name || "N/A"}</p>
+        <p><b>Unit:</b> {report.shift?.unit?.name || "N/A"}</p>
+        <p><b>Shift:</b> {report.shift?.shiftType}</p>
+        <p><b>Status:</b> {report.shift?.status}</p>
       </div>
 
       {/* EVENTS */}
@@ -189,12 +222,26 @@ function ShiftDetails() {
 
         {!isLocked && (
           <div style={styles.inputRow}>
+            <select
+              value={selectedDepartment}
+              onChange={(e) => setSelectedDepartment(e.target.value)}
+              style={styles.input}
+            >
+              <option value="">Select Department</option>
+              {departments.map((d) => (
+                <option key={d._id} value={d._id}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+
             <input
               value={issueText}
               placeholder="Issue description"
               onChange={(e) => setIssueText(e.target.value)}
               style={styles.input}
             />
+
             <button onClick={addIssue} style={styles.btn}>
               Add Issue
             </button>
@@ -214,10 +261,32 @@ function ShiftDetails() {
               <tr key={i._id}>
                 <td>{i.equipment}</td>
                 <td>
-                  <span style={getStatusStyle(i.status)}>
-                    {i.status}
-                  </span>
-                </td>
+  <span style={getStatusStyle(i.status)}>
+    {i.status}
+  </span>
+
+  {!isLocked && (
+    <div style={{ marginTop: 5, display: "flex", gap: 5 }}>
+      {i.status === "open" && (
+        <button
+          onClick={() => updateIssueStatus(i._id, "wip")}
+          style={styles.smallBtn}
+        >
+          Mark WIP
+        </button>
+      )}
+
+      {i.status === "wip" && (
+        <button
+          onClick={() => updateIssueStatus(i._id, "closed")}
+          style={styles.smallBtn}
+        >
+          Close
+        </button>
+      )}
+    </div>
+  )}
+</td>
                 <td>{i.description}</td>
               </tr>
             ))}
@@ -261,34 +330,30 @@ function ShiftDetails() {
   );
 }
 
-/* ================= STATUS STYLE ================= */
 const getStatusStyle = (status) => {
-  if (status === "OPEN")
-    return { background: "#ffebee", color: "#c62828", padding: 5 };
-
-  if (status === "WIP")
-    return { background: "#fff3e0", color: "#ef6c00", padding: 5 };
-
-  if (status === "CLOSED")
-    return { background: "#e8f5e9", color: "#2e7d32", padding: 5 };
-
+  if (status === "open") return { color: "red" };
+  if (status === "wip") return { color: "orange" };
+  if (status === "closed") return { color: "green" };
   return {};
 };
 
-/* ================= STYLES ================= */
 const styles = {
-  container: { padding: 40, background: "#f4f6f8" },
-  card: {
-    background: "#fff",
-    padding: 20,
-    marginBottom: 25,
-    borderRadius: 8,
-  },
-  table: { width: "100%" },
-  inputRow: { display: "flex", gap: 10, marginBottom: 15 },
+  container: { padding: 40 },
+  card: { background: "#fff", padding: 20, marginBottom: 20 },
+  inputRow: { display: "flex", gap: 10 },
   input: { flex: 1, padding: 8 },
-  btn: { padding: "8px 14px", background: "#1976d2", color: "#fff" },
+  btn: { padding: "8px 12px", background: "#1976d2", color: "#fff" },
+  table: { width: "100%" },
   parameterRow: { display: "flex", gap: 10, marginBottom: 10 },
+  smallBtn: {
+  padding: "4px 8px",
+  fontSize: "12px",
+  border: "none",
+  borderRadius: "4px",
+  background: "#555",
+  color: "#fff",
+  cursor: "pointer",
+}
 };
 
 export default ShiftDetails;

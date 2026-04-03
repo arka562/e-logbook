@@ -66,6 +66,28 @@ export const createDepartment = async (req, res) => {
 
     res.status(201).json(department);
 };
+
+export const getDepartments = async (req, res) => {
+  try {
+    const departments = await Department.find()
+      .select("name")
+      .sort({ name: 1 });
+
+    return res.status(200).json({
+      success: true,
+      count: departments.length,
+      data: departments,
+    });
+
+  } catch (error) {
+    console.error("Get Departments Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
 export const getDepartmentsByPlant = async (req, res) => {
 
     const { plantId } = req.params;
@@ -96,6 +118,11 @@ export const createUnit = async (req, res) => {
 
     res.status(201).json(unit);
 
+};
+
+export const getUnits = async (req, res) => {
+  const units = await Unit.find().select("name plant");
+  res.json({ success: true, data: units });
 };
 
 export const getUnitsByDepartment = async (req, res) => {

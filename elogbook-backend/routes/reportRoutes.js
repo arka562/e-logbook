@@ -4,7 +4,7 @@ import { helper,roleAuthorization } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.get("/shift/:shiftId",helper,roleAuthorization("admin","shift_incharge","hod"),getShiftReport);
+router.get("/shift/:shiftId",helper,roleAuthorization("admin","shift_incharge","hod","operator"),getShiftReport);
 router.get("/shift/:shiftId/pdf",helper,roleAuthorization("admin","shift_incharge","hod"),downloadShiftReport);
 
 export default router;

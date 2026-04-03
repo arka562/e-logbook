@@ -3,7 +3,7 @@ import Plant from "../models/Plant.model.js";
 import Unit from "../models/Unit.model.js";
 import User from "../models/User.model.js";
 import { logAudit } from "../utils/auditLogger.js";
-
+console.log("Controller hit");
 /* ================= CREATE SHIFT ================= */
 export const createShift = async (req, res) => {
   try {
@@ -16,34 +16,55 @@ export const createShift = async (req, res) => {
       });
     }
 
-    const plantExists = await Plant.findById(plant);
-    if (!plantExists) {
-      return res.status(404).json({ success: false, message: "Plant not found" });
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
     }
-
     const unitExists = await Unit.findById(unit);
-    if (!unitExists) {
-      return res.status(404).json({ success: false, message: "Unit not found" });
-    }
 
-    const existingShift = await Shift.findOne({ date, unit, shiftType });
+if (!unitExists) {
+  return res.status(400).json({
+    success: false,
+    message: "Unit not found",
+  });
+}
+
+// ✅ CHECK RELATION
+if (unitExists.plant.toString() !== plant) {
+  return res.status(400).json({
+    success: false,
+    message: "Selected unit does not belong to selected plant",
+  });
+}
+
+    const shiftDate = new Date(date);
+    shiftDate.setHours(0, 0, 0, 0);
+
+    const existingShift = await Shift.findOne({
+      date: {
+        $gte: shiftDate,
+        $lt: new Date(shiftDate.getTime() + 86400000),
+      },
+      unit,
+      shiftType,
+    });
+
     if (existingShift) {
       return res.status(400).json({
         success: false,
-        message: "Shift already exists for this unit/date/type",
+        message: "Shift already exists",
       });
     }
 
-    // ✅ take user from token
-    const shiftInCharge = req.user._id;
-
     const shift = await Shift.create({
-      date,
+      date: shiftDate,
       shiftType,
       plant,
       unit,
-      shiftInCharge,
-      engineers: engineers || [], // ✅ now works with name/role
+      shiftInCharge: req.user._id,
+      engineers: engineers || [],
       status: "draft",
     });
 
@@ -55,7 +76,10 @@ export const createShift = async (req, res) => {
 
   } catch (error) {
     console.error("Create Shift Error:", error);
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
 

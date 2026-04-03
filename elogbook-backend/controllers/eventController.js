@@ -2,13 +2,36 @@ import EventLog from "../models/EventLog.model.js";
 import Shift from "../models/Shift.model.js";
 import Unit from "../models/Unit.model.js";
 
+import mongoose from "mongoose";
+
 export const createEvent = async (req, res) => {
+  try {
     const { shiftId, unitId, description } = req.body;
 
+    // ✅ Auth check
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    // ✅ Required fields
     if (!shiftId || !unitId || !description) {
       return res.status(400).json({
         success: false,
-        message: "Shift ID, Unit ID and description are required"
+        message: "Shift ID, Unit ID and description are required",
+      });
+    }
+
+    // ✅ ObjectId validation
+    if (
+      !mongoose.Types.ObjectId.isValid(shiftId) ||
+      !mongoose.Types.ObjectId.isValid(unitId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ID format",
       });
     }
 
@@ -16,14 +39,14 @@ export const createEvent = async (req, res) => {
     if (!shift) {
       return res.status(404).json({
         success: false,
-        message: "Shift not found"
+        message: "Shift not found",
       });
     }
 
     if (shift.status === "locked") {
       return res.status(400).json({
         success: false,
-        message: "Shift is locked. Cannot add event."
+        message: "Shift is locked. Cannot add event.",
       });
     }
 
@@ -31,27 +54,39 @@ export const createEvent = async (req, res) => {
     if (!unit) {
       return res.status(404).json({
         success: false,
-        message: "Unit not found"
+        message: "Unit not found",
       });
     }
 
-   
+    // ✅ RELATION CHECK (VERY IMPORTANT)
+    if (shift.unit.toString() !== unitId) {
+      return res.status(400).json({
+        success: false,
+        message: "Unit does not belong to this shift",
+      });
+    }
 
     const event = await EventLog.create({
       shift: shiftId,
       unit: unitId,
       description,
-      createdBy: req.user._id
+      createdBy: req.user._id,
     });
 
     res.status(201).json({
       success: true,
       message: "Event created successfully",
-      data: event
+      data: event,
     });
 
+  } catch (error) {
+    console.error("Create Event Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
 };
-
 export const getEvents = async (req, res) => {
 
     const {

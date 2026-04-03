@@ -4,7 +4,6 @@ import api from "../api/axios";
 import Card from "../components/Card";
 
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
-
 import { Pie } from "react-chartjs-2";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -20,9 +19,9 @@ function Dashboard() {
     const fetchDashboard = async () => {
       try {
         const res = await api.get("/dashboard");
-
-        setData(res.data.data);
+        setData(res.data?.data || {}); // ✅ safe fallback
       } catch (err) {
+        console.error("Dashboard Error:", err); // ✅ better debug
         setError("Failed to load dashboard");
       } finally {
         setLoading(false);
@@ -35,20 +34,37 @@ function Dashboard() {
   if (loading) return <p style={styles.message}>Loading dashboard...</p>;
   if (error) return <p style={styles.error}>{error}</p>;
 
+  // ✅ Safe destructuring
   const shifts = data?.shifts || {};
   const issues = data?.issues || {};
   const events = data?.events || {};
   const parameterEntries = data?.parameterEntries || {};
 
+  // ✅ Pie Data
   const issueData = {
     labels: ["Open", "WIP", "Closed"],
     datasets: [
       {
         label: "Issues",
-        data: [issues.open ?? 0, issues.wip ?? 0, issues.closed ?? 0],
+        data: [
+          issues.open ?? 0,
+          issues.wip ?? 0,
+          issues.closed ?? 0,
+        ],
         backgroundColor: ["#ef4444", "#f59e0b", "#22c55e"],
       },
     ],
+  };
+
+  // ✅ Chart options (FIX SIZE)
+  const pieOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: "bottom",
+      },
+    },
   };
 
   return (
@@ -70,7 +86,10 @@ function Dashboard() {
         <div style={styles.chartBox}>
           <h4>Issue Status Distribution</h4>
 
-          <Pie data={issueData} />
+          {/* ✅ FIXED SIZE WRAPPER */}
+          <div style={{ width: "250px", height: "250px", margin: "auto" }}>
+            <Pie data={issueData} options={pieOptions} />
+          </div>
         </div>
       </div>
 
@@ -83,7 +102,10 @@ function Dashboard() {
           Create Shift
         </button>
 
-        <button style={styles.secondaryBtn} onClick={() => navigate("/shifts")}>
+        <button
+          style={styles.secondaryBtn}
+          onClick={() => navigate("/shifts")}
+        >
           View Shifts
         </button>
       </div>

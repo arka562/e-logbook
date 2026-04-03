@@ -1,62 +1,110 @@
+import mongoose from "mongoose";
 import Issue from "../models/Issue.model.js";
 import Shift from "../models/Shift.model.js";
 import Unit from "../models/Unit.model.js";
 import Department from "../models/Department.model.js";
 
-
-// ✅ CREATE ISSUE
 export const createIssue = async (req, res) => {
   try {
     const { shiftId, unitId, equipment, description, department } = req.body;
 
+    // ✅ Auth check
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    // ✅ Required fields
     if (!shiftId || !unitId || !equipment || !description || !department) {
       return res.status(400).json({
         success: false,
-        message: "All required fields must be provided"
+        message: "All required fields must be provided",
       });
     }
 
-    const shift = await Shift.findById(shiftId);
-    if (!shift) {
-      return res.status(404).json({ success: false, message: "Shift not found" });
+    // ✅ ObjectId validation
+    if (
+      !mongoose.Types.ObjectId.isValid(shiftId) ||
+      !mongoose.Types.ObjectId.isValid(unitId) ||
+      !mongoose.Types.ObjectId.isValid(department)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ID format",
+      });
     }
 
+    // ✅ Shift check
+    const shift = await Shift.findById(shiftId);
+    if (!shift) {
+      return res.status(404).json({
+        success: false,
+        message: "Shift not found",
+      });
+    }
+
+    // ✅ Locked check
     if (shift.status === "locked") {
       return res.status(400).json({
         success: false,
-        message: "Shift is locked"
+        message: "Shift is locked",
       });
     }
 
+    // ✅ Unit check
     const unit = await Unit.findById(unitId);
     if (!unit) {
-      return res.status(404).json({ success: false, message: "Unit not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Unit not found",
+      });
     }
 
+    // ✅ Department check
     const dept = await Department.findById(department);
     if (!dept) {
-      return res.status(404).json({ success: false, message: "Department not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Department not found",
+      });
     }
 
+    // ✅ RELATION CHECK
+    if (!shift.unit || shift.unit.toString() !== unitId) {
+      return res.status(400).json({
+        success: false,
+        message: "Unit does not belong to this shift",
+      });
+    }
+
+    // ✅ Create issue
     const issue = await Issue.create({
       shift: shiftId,
       unit: unitId,
       department,
       equipment,
       description,
-      createdBy: req.user._id
+      createdBy: req.user._id,
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "Issue created successfully",
-      data: issue
+      data: issue,
     });
 
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error("Create Issue Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
   }
 };
+
 
 
 // ✅ GET ALL ISSUES

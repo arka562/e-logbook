@@ -38,6 +38,9 @@ function MainLayout({ children }) {
           <NavLink to="/shifts" style={linkStyle}>
             Shift List
           </NavLink>
+          <NavLink to="/analytics" style={linkStyle}>
+  Analytics
+</NavLink>
         </nav>
 
         <div style={{ marginTop: "auto" }}>

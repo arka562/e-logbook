@@ -6,7 +6,7 @@ import {
   getDepartmentsByPlant,
   getUnitsByDepartment,
   createDepartment,
-  createUnit,
+  createUnit,getUnits,getDepartments
 } from "../controllers/adminController.js";
 
 import { helper, roleAuthorization } from "../middleware/authMiddleware.js";
@@ -17,8 +17,10 @@ router.post("/plant", helper, roleAuthorization("admin"), createPlant);
 router.get("/plants",helper,getPlants);
 router.delete("/plants/:id",helper,roleAuthorization("admin"),deletePlant);
 router.post("/department", helper, roleAuthorization("admin"), createDepartment);
+router.get("/departments", helper, getDepartments);
 router.get("/plants/:plantId/departments",helper,getDepartmentsByPlant);
 router.get("/departments/:departmentId/units",helper,getUnitsByDepartment);
 router.post("/unit", helper, roleAuthorization("admin"), createUnit);
+router.get("/units",helper,getUnits);
 
 export default router;

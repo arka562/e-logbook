@@ -9,6 +9,7 @@ import ShiftDetails from "./pages/ShiftDetails";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import MainLayout from "./pages/MainLayout.jsx";
 import ReportView from "./pages/ReportView";
+import Analytics from "./pages/Analytics";
 
 function App() {
   return (
@@ -69,6 +70,17 @@ function App() {
     <ProtectedRoute>
       <MainLayout>
         <ReportView/>
+      </MainLayout>
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/analytics"
+  element={
+    <ProtectedRoute>
+      <MainLayout>
+        <Analytics />
       </MainLayout>
     </ProtectedRoute>
   }
