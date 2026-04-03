@@ -10,6 +10,7 @@ import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import MainLayout from "./pages/MainLayout.jsx";
 import ReportView from "./pages/ReportView";
 import Analytics from "./pages/Analytics";
+import ParameterTemplate from "./pages/ParameterTemplate.jsx";
 
 function App() {
   return (
@@ -85,6 +86,13 @@ function App() {
     </ProtectedRoute>
   }
 />
+<Route path="/parameters" element={
+   <ProtectedRoute>
+      <MainLayout>
+  <ParameterTemplate />
+    </MainLayout>
+    </ProtectedRoute>
+  } />
       </Routes>
     </BrowserRouter>
   );
