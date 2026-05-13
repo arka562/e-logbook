@@ -43,6 +43,9 @@ function MainLayout({ children }) {
   Analytics
 </NavLink>
 <NavLink to="/parameters" style={linkStyle}>Parameters</NavLink>
+<NavLink to="/ml/anomaly" style={linkStyle}>
+  ML Anomaly
+</NavLink>
         </nav>
 
         <div style={{ marginTop: "auto" }}>

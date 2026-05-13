@@ -11,6 +11,7 @@ import MainLayout from "./pages/MainLayout.jsx";
 import ReportView from "./pages/ReportView";
 import Analytics from "./pages/Analytics";
 import ParameterTemplate from "./pages/ParameterTemplate.jsx";
+import AnomalyView from "./pages/AnomalyView.jsx";
 
 function App() {
   return (
@@ -93,6 +94,16 @@ function App() {
     </MainLayout>
     </ProtectedRoute>
   } />
+  <Route
+  path="/ml/anomaly"
+  element={
+    <ProtectedRoute>
+      <MainLayout>
+        <AnomalyView />
+      </MainLayout>
+    </ProtectedRoute>
+  }
+/>
       </Routes>
     </BrowserRouter>
   );

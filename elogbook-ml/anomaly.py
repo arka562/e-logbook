@@ -13,7 +13,7 @@ try:
 
     data = json.loads(input_data)
 
-    if len(data) < 5:
+    if len(data) < 1:
         print(json.dumps({"error": "Not enough data for anomaly detection"}))
         sys.exit(1)
 

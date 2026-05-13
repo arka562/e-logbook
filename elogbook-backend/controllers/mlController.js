@@ -1,6 +1,6 @@
 import { spawn } from "child_process";
 import mongoose from "mongoose";
-import ParameterEntry from "../models/ParameterEntry.js";
+import ParameterEntry from "../models/ParameterEntry.mode.js";
 
 export const detectAnomaly = async (req, res) => {
   try {
@@ -14,18 +14,21 @@ export const detectAnomaly = async (req, res) => {
       });
     }
 
+
     // ✅ Fetch data
     const entries = await ParameterEntry.find({
       parameterId: parameterId,
     }).sort({ createdAt: 1 });
-
+        
     // ✅ Clean data
     const data = entries
       .map((e) => Number(e.unit1Value))
       .filter((v) => !isNaN(v))
       .map((v) => ({ value: v }));
-
-    if (data.length < 5) {
+        console.log("TOTAL ENTRIES:", entries.length);
+console.log("RAW VALUES:", entries.map(e => e.unit1Value));
+console.log("VALID NUMBERS:", data);
+    if (data.length < 1) {
       return res.status(400).json({
         success: false,
         message: "Not enough data for anomaly detection",
@@ -33,7 +36,7 @@ export const detectAnomaly = async (req, res) => {
     }
 
     // ✅ Spawn Python process
-    const py = spawn("python", ["ml/anomaly.py"]);
+    const py = spawn("python", ["../elogbook-ml/anomaly.py"]);
 
     let result = "";
     let errorOutput = "";
