@@ -13,28 +13,31 @@ function ShiftDetails() {
   const [departments, setDepartments] = useState([]);
   const [selectedDepartment, setSelectedDepartment] = useState("");
 
+  const [parameterCategory, setParameterCategory] = useState("shift_parameters");
+
+  const plantId = report?.shift?.plant?._id;
+  const isLocked = report?.shift?.status === "locked";
+
   // ================= FETCH REPORT =================
   const fetchReport = async () => {
     try {
       const res = await api.get(`/reports/shift/${id}`);
-      const data = res.data.data;
-
-      setReport(data);
-
-      if (data?.shift?.plant?._id) {
-        fetchParameters(data.shift.plant._id);
-      }
+      setReport(res.data.data || null);
     } catch (error) {
       console.error(error);
       alert("Failed to load report");
     }
   };
 
-  const fetchParameters = async (plantId) => {
+  const fetchParameters = async (plantIdValue, categoryValue) => {
     try {
-      const res = await api.get(
-        `/parameters/templates?category=shift_parameters&plant=${plantId}`
-      );
+      const res = await api.get("/parameters/templates", {
+        params: {
+          category: categoryValue,
+          plant: plantIdValue,
+        },
+      });
+
       setParameters(res.data?.data || []);
     } catch (error) {
       console.error(error);
@@ -51,12 +54,16 @@ function ShiftDetails() {
     }
   };
 
-  useEffect(() => { 
+  useEffect(() => {
     fetchReport();
     fetchDepartments();
   }, [id]);
 
-  const isLocked = report?.shift?.status === "locked";
+  useEffect(() => {
+    if (plantId) {
+      fetchParameters(plantId, parameterCategory);
+    }
+  }, [plantId, parameterCategory]);
 
   const handleChange = (paramId, field, value) => {
     setValues({
@@ -100,7 +107,7 @@ function ShiftDetails() {
     }
 
     try {
-      await api.post("/event", {
+      await api.post("/events", {
         shiftId: report.shift._id,
         unitId: report.shift.unit._id,
         description: eventText,
@@ -149,23 +156,20 @@ function ShiftDetails() {
     }
   };
 
+  // ================= ISSUE STATUS UPDATE =================
   const updateIssueStatus = async (issueId, newStatus) => {
-  try {
-    await api.patch(`/issues/${issueId}/status`, {
-      status: newStatus,
-    });
+    try {
+      await api.patch(`/issues/${issueId}/status`, {
+        status: newStatus,
+      });
 
-    fetchReport(); // refresh UI
+      fetchReport();
+    } catch (error) {
+      console.error(error);
+      alert(error?.response?.data?.message || "Failed to update issue status");
+    }
+  };
 
-  } catch (error) {
-    console.error(error);
-
-    alert(
-      error?.response?.data?.message ||
-      "Failed to update issue status"
-    );
-  }
-};
   if (!report) return <p>Loading...</p>;
 
   return (
@@ -176,8 +180,8 @@ function ShiftDetails() {
       <div style={styles.card}>
         <p><b>Plant:</b> {report.shift?.plant?.name || "N/A"}</p>
         <p><b>Unit:</b> {report.shift?.unit?.name || "N/A"}</p>
-        <p><b>Shift:</b> {report.shift?.shiftType}</p>
-        <p><b>Status:</b> {report.shift?.status}</p>
+        <p><b>Shift:</b> {report.shift?.shiftType || "N/A"}</p>
+        <p><b>Status:</b> {report.shift?.status?.toUpperCase?.() || "N/A"}</p>
       </div>
 
       {/* EVENTS */}
@@ -261,32 +265,30 @@ function ShiftDetails() {
               <tr key={i._id}>
                 <td>{i.equipment}</td>
                 <td>
-  <span style={getStatusStyle(i.status)}>
-    {i.status}
-  </span>
+                  <span style={getStatusStyle(i.status)}>{i.status}</span>
 
-  {!isLocked && (
-    <div style={{ marginTop: 5, display: "flex", gap: 5 }}>
-      {i.status === "open" && (
-        <button
-          onClick={() => updateIssueStatus(i._id, "wip")}
-          style={styles.smallBtn}
-        >
-          Mark WIP
-        </button>
-      )}
+                  {!isLocked && (
+                    <div style={{ marginTop: 5, display: "flex", gap: 5 }}>
+                      {i.status === "open" && (
+                        <button
+                          onClick={() => updateIssueStatus(i._id, "wip")}
+                          style={styles.smallBtn}
+                        >
+                          Mark WIP
+                        </button>
+                      )}
 
-      {i.status === "wip" && (
-        <button
-          onClick={() => updateIssueStatus(i._id, "closed")}
-          style={styles.smallBtn}
-        >
-          Close
-        </button>
-      )}
-    </div>
-  )}
-</td>
+                      {i.status === "wip" && (
+                        <button
+                          onClick={() => updateIssueStatus(i._id, "closed")}
+                          style={styles.smallBtn}
+                        >
+                          Close
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </td>
                 <td>{i.description}</td>
               </tr>
             ))}
@@ -298,33 +300,49 @@ function ShiftDetails() {
       <div style={styles.card}>
         <h3>Shift Parameters</h3>
 
-        {parameters.map((p) => (
-          <div key={p._id} style={styles.parameterRow}>
-            <b>{p.name}</b>
+        <div style={{ marginBottom: 15 }}>
+          <select
+            value={parameterCategory}
+            onChange={(e) => setParameterCategory(e.target.value)}
+            style={{ ...styles.input, maxWidth: 280 }}
+          >
+            <option value="shift_parameters">Shift Parameters</option>
+            <option value="electrical">Electrical</option>
+            <option value="switchyard">Switchyard</option>
+            <option value="fire_system">Fire System</option>
+            <option value="equipment_status">Equipment Status</option>
+          </select>
+        </div>
 
-            <input
-              placeholder="Unit 1"
-              disabled={isLocked}
-              onChange={(e) =>
-                handleChange(p._id, "unit1", e.target.value)
-              }
-            />
+        {parameters.length === 0 ? (
+          <p>No parameters found for this category.</p>
+        ) : (
+          parameters.map((p) => (
+            <div key={p._id} style={styles.parameterRow}>
+              <b>{p.name}</b>
 
-            <input
-              placeholder="Unit 2"
-              disabled={isLocked}
-              onChange={(e) =>
-                handleChange(p._id, "unit2", e.target.value)
-              }
-            />
+              <input
+                placeholder="Unit 1"
+                disabled={isLocked}
+                onChange={(e) => handleChange(p._id, "unit1", e.target.value)}
+                style={styles.input}
+              />
 
-            {!isLocked && (
-              <button onClick={() => saveParameter(p._id)}>
-                Save
-              </button>
-            )}
-          </div>
-        ))}
+              <input
+                placeholder="Unit 2"
+                disabled={isLocked}
+                onChange={(e) => handleChange(p._id, "unit2", e.target.value)}
+                style={styles.input}
+              />
+
+              {!isLocked && (
+                <button onClick={() => saveParameter(p._id)} style={styles.btn}>
+                  Save
+                </button>
+              )}
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
@@ -339,21 +357,21 @@ const getStatusStyle = (status) => {
 
 const styles = {
   container: { padding: 40 },
-  card: { background: "#fff", padding: 20, marginBottom: 20 },
-  inputRow: { display: "flex", gap: 10 },
+  card: { background: "#fff", padding: 20, marginBottom: 20, borderRadius: 8 },
+  inputRow: { display: "flex", gap: 10, marginBottom: 15 },
   input: { flex: 1, padding: 8 },
-  btn: { padding: "8px 12px", background: "#1976d2", color: "#fff" },
-  table: { width: "100%" },
-  parameterRow: { display: "flex", gap: 10, marginBottom: 10 },
+  btn: { padding: "8px 12px", background: "#1976d2", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer" },
+  table: { width: "100%", borderCollapse: "collapse" },
+  parameterRow: { display: "flex", gap: 10, marginBottom: 10, alignItems: "center" },
   smallBtn: {
-  padding: "4px 8px",
-  fontSize: "12px",
-  border: "none",
-  borderRadius: "4px",
-  background: "#555",
-  color: "#fff",
-  cursor: "pointer",
-}
+    padding: "4px 8px",
+    fontSize: "12px",
+    border: "none",
+    borderRadius: "4px",
+    background: "#555",
+    color: "#fff",
+    cursor: "pointer",
+  },
 };
 
 export default ShiftDetails;

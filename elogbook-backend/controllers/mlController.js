@@ -1,6 +1,7 @@
 import { spawn } from "child_process";
 import mongoose from "mongoose";
 import ParameterEntry from "../models/ParameterEntry.mode.js";
+import Issue from "../models/Issue.model.js";
 
 export const detectAnomaly = async (req, res) => {
   try {
@@ -94,3 +95,59 @@ console.log("VALID NUMBERS:", data);
     });
   }
 };
+
+
+
+
+
+export const predictiveMaintenance = async (req, res) => {
+  try {
+
+    const stats = await Issue.aggregate([
+      {
+        $group: {
+          _id: "$equipment",
+          count: { $sum: 1 },
+        },
+      },
+
+      {
+        $sort: {
+          count: -1,
+        },
+      },
+    ]);
+
+    const result = stats.map((s) => {
+
+      let risk = "Low";
+
+      if (s.count >= 4) {
+        risk = "High";
+      } else if (s.count >= 2) {
+        risk = "Medium";
+      }
+
+      return {
+        equipment: s._id,
+        issueCount: s.count,
+        risk,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: result.length,
+      data: result,
+    });
+
+  } catch (error) {
+
+    console.error("Predictive Maintenance Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};;

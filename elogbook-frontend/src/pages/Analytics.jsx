@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import api from "../api/axios";
+import PredictiveMaintenance from "../components/PredictiveMaintenance";
 
 import {
   Chart as ChartJS,
@@ -252,8 +253,11 @@ function Analytics() {
                 >
                   <td>{a.value}</td>
                   <td>{a.anomaly === -1 ? "⚠️ Abnormal" : "Normal"}</td>
+                  <PredictiveMaintenance />
                 </tr>
+                
               ))
+              
             ) : (
               <tr>
                 <td colSpan="2">No anomaly data available</td>
