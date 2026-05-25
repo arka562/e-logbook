@@ -149,16 +149,16 @@ function ReportView() {
                 <tbody>
                   {parameters.length === 0 ? (
                     <tr>
-                      <td colSpan="3" style={tdEmpty}>
+                      <td colSpan="3" style={styles.tdEmpty}>
                         No parameters recorded
                       </td>
                     </tr>
                   ) : (
                     parameters.map((p) => (
                       <tr key={p._id}>
-                        <td style={tdBold}>{p.parameter?.name || "N/A"}</td>
-                        <td style={td}>{p.unit1Value || "-"}</td>
-                        <td style={td}>{p.unit2Value || "-"}</td>
+                        <td style={styles.tdBold}>{p.parameter?.name || "N/A"}</td>
+                        <td style={styles.td}>{p.unit1Value || "-"}</td>
+                        <td style={styles.td}>{p.unit2Value || "-"}</td>
                       </tr>
                     ))
                   )}

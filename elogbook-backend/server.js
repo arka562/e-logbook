@@ -33,13 +33,13 @@ app.get("/api/health", (req, res) => {
     message: "E-Logbook Backend Running"
   });
 });
-app.use(errorHandler);
 app.use('/api/auth', authRoutes);
 app.use('/api/auth', testRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/shifts", shiftRoutes);
 app.use("/api/parameters", parameterRoutes);
 app.use("/api/event",eventRoutes);
+app.use("/api/events",eventRoutes);
 app.use("/api/issues", issueRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/audit", auditRoutes);
@@ -47,6 +47,7 @@ app.use("/api/reports", reportRoutes);
 app.use("/api/entries",entryRoute);
 app.use("/api/analytics", analyticsRoute);
 app.use("/api/ml", mlRoutes);
+app.use(errorHandler);
 // MUST BE LAST
 // app.use((err, req, res, next) => {
 //   console.error("Server error:", err.stack);

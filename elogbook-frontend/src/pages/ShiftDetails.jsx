@@ -55,14 +55,21 @@ function ShiftDetails() {
   };
 
   useEffect(() => {
-    fetchReport();
-    fetchDepartments();
+    const loadInitialData = async () => {
+      await Promise.all([fetchReport(), fetchDepartments()]);
+    };
+
+    loadInitialData();
   }, [id]);
 
   useEffect(() => {
-    if (plantId) {
-      fetchParameters(plantId, parameterCategory);
-    }
+    const loadParameters = async () => {
+      if (plantId) {
+        await fetchParameters(plantId, parameterCategory);
+      }
+    };
+
+    loadParameters();
   }, [plantId, parameterCategory]);
 
   const handleChange = (paramId, field, value) => {

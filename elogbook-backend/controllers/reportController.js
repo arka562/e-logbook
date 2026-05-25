@@ -1,8 +1,17 @@
 import Shift from "../models/Shift.model.js";
-import ParameterEntry from "../models/ParameterTemplate.model.js";
+import ParameterEntry from "../models/ParameterEntry.mode.js";
 import EventLog from "../models/EventLog.model.js";
 import Issue from "../models/Issue.model.js";
 import { generateShiftPDF } from "../utils/pdfGenerator.js";
+
+const normalizeParameterEntries = (entries) =>
+  entries.map((entry) => {
+    const entryObject = entry.toObject();
+    return {
+      ...entryObject,
+      parameter: entryObject.parameterId,
+    };
+  });
 
 /* ================= GET SHIFT REPORT ================= */
 export const getShiftReport = async (req, res) => {
@@ -21,8 +30,8 @@ export const getShiftReport = async (req, res) => {
       });
     }
 
-    const parameters = await ParameterEntry.find({ shift: shiftId })
-      .populate("parameter");
+    const parameters = await ParameterEntry.find({ shiftId })
+      .populate("parameterId");
 
     const events = await EventLog.find({ shift: shiftId })
       .populate("unit", "name")
@@ -38,7 +47,7 @@ export const getShiftReport = async (req, res) => {
       success: true,
       data: {
         shift,
-        parameters,
+        parameters: normalizeParameterEntries(parameters),
         events,
         issues,
       },
@@ -72,8 +81,8 @@ export const downloadShiftReport = async (req, res) => {
     }
 
     const [parameters, events, issues] = await Promise.all([
-      ParameterEntry.find({ shift: shiftId })
-        .populate("parameter")
+      ParameterEntry.find({ shiftId })
+        .populate("parameterId")
         .sort({ createdAt: 1 }),
 
       EventLog.find({ shift: shiftId })
@@ -85,7 +94,7 @@ export const downloadShiftReport = async (req, res) => {
 
     const reportData = {
       shift,
-      parameters,
+      parameters: normalizeParameterEntries(parameters),
       events,
       issues,
     };

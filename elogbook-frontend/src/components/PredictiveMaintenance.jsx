@@ -34,12 +34,6 @@ function PredictiveMaintenance() {
     return { high, medium, low };
   }, [data]);
 
-  const getColor = (risk) => {
-    if (risk === "High") return "#b91c1c";
-    if (risk === "Medium") return "#b45309";
-    return "#166534";
-  };
-
   const getBadgeStyle = (risk) => {
     if (risk === "High") {
       return {
