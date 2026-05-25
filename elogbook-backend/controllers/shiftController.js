@@ -305,3 +305,56 @@ export const lockShift = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+/* ================= UPDATE HANDOVER REMARKS ================= */
+export const updateHandoverRemarks = async (req, res) => {
+  try {
+    const { shiftId } = req.params;
+    const { handoverRemarks } = req.body;
+
+    if (typeof handoverRemarks !== "string" || !handoverRemarks.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Handover remarks are required",
+      });
+    }
+
+    const shift = await Shift.findById(shiftId);
+
+    if (!shift) {
+      return res.status(404).json({
+        success: false,
+        message: "Shift not found",
+      });
+    }
+
+    if (shift.status === "locked" || shift.status === "closed") {
+      return res.status(400).json({
+        success: false,
+        message: "Handover remarks cannot be changed after shift is locked or closed",
+      });
+    }
+
+    shift.handoverRemarks = handoverRemarks.trim();
+    await shift.save();
+
+    await logAudit({
+      action: "UPDATE_HANDOVER",
+      entity: "SHIFT",
+      entityId: shift._id,
+      userId: req.user._id,
+      description: "Shift handover remarks updated",
+      userRole: req.user.role,
+      ipAddress: req.ip,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Handover remarks updated successfully",
+      data: shift,
+    });
+  } catch (error) {
+    console.error("Update Handover Remarks Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};

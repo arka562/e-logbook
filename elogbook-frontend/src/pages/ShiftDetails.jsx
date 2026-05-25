@@ -12,6 +12,7 @@ function ShiftDetails() {
   const [issueText, setIssueText] = useState("");
   const [departments, setDepartments] = useState([]);
   const [selectedDepartment, setSelectedDepartment] = useState("");
+  const [handoverRemarks, setHandoverRemarks] = useState("");
 
   const [parameterCategory, setParameterCategory] = useState("shift_parameters");
 
@@ -22,7 +23,10 @@ function ShiftDetails() {
   const fetchReport = async () => {
     try {
       const res = await api.get(`/reports/shift/${id}`);
-      setReport(res.data.data || null);
+      const reportData = res.data.data || null;
+
+      setReport(reportData);
+      setHandoverRemarks(reportData?.shift?.handoverRemarks || "");
     } catch (error) {
       console.error(error);
       alert("Failed to load report");
@@ -98,6 +102,26 @@ function ShiftDetails() {
     } catch (error) {
       console.error(error);
       alert("Save failed");
+    }
+  };
+
+  // ================= SAVE HANDOVER =================
+  const saveHandoverRemarks = async () => {
+    if (!handoverRemarks.trim()) {
+      alert("Please enter handover remarks");
+      return;
+    }
+
+    try {
+      await api.patch(`/shifts/${id}/handover`, {
+        handoverRemarks,
+      });
+
+      alert("Handover remarks saved");
+      fetchReport();
+    } catch (error) {
+      console.error(error);
+      alert(error?.response?.data?.message || "Failed to save handover remarks");
     }
   };
 
@@ -189,6 +213,25 @@ function ShiftDetails() {
         <p><b>Unit:</b> {report.shift?.unit?.name || "N/A"}</p>
         <p><b>Shift:</b> {report.shift?.shiftType || "N/A"}</p>
         <p><b>Status:</b> {report.shift?.status?.toUpperCase?.() || "N/A"}</p>
+      </div>
+
+      {/* HANDOVER */}
+      <div style={styles.card}>
+        <h3>Shift Handover</h3>
+
+        <textarea
+          value={handoverRemarks}
+          placeholder="Write key observations, pending work, safety notes, or instructions for the next shift"
+          disabled={isLocked}
+          onChange={(e) => setHandoverRemarks(e.target.value)}
+          style={styles.textarea}
+        />
+
+        {!isLocked && (
+          <button onClick={saveHandoverRemarks} style={styles.btn}>
+            Save Handover
+          </button>
+        )}
       </div>
 
       {/* EVENTS */}
@@ -367,6 +410,14 @@ const styles = {
   card: { background: "#fff", padding: 20, marginBottom: 20, borderRadius: 8 },
   inputRow: { display: "flex", gap: 10, marginBottom: 15 },
   input: { flex: 1, padding: 8 },
+  textarea: {
+    width: "100%",
+    minHeight: 110,
+    padding: 10,
+    resize: "vertical",
+    marginBottom: 10,
+    boxSizing: "border-box",
+  },
   btn: { padding: "8px 12px", background: "#1976d2", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer" },
   table: { width: "100%", borderCollapse: "collapse" },
   parameterRow: { display: "flex", gap: 10, marginBottom: 10, alignItems: "center" },

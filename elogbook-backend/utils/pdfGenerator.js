@@ -31,6 +31,12 @@ export const generateShiftPDF = (res, reportData) => {
 
   doc.moveDown();
 
+  doc.fontSize(14).text("Shift Handover", { underline: true }).moveDown(0.5);
+
+  doc.fontSize(11).text(shift.handoverRemarks || "No handover remarks recorded.");
+
+  doc.moveDown();
+
   doc.fontSize(14).text("Parameters", { underline: true }).moveDown(0.5);
 
   if (parameters.length === 0) {

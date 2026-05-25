@@ -1,5 +1,5 @@
 import express from "express";
-import { createShift,getShifts,getShiftById,deleteShift,submitShift,approveShift,lockShift } from "../controllers/shiftController.js";
+import { createShift,getShifts,getShiftById,deleteShift,submitShift,approveShift,lockShift,updateHandoverRemarks } from "../controllers/shiftController.js";
 import { helper, roleAuthorization } from "../middleware/authMiddleware.js";
 import { validate } from "../middleware/validate.js";
 import { createShiftSchema } from "../validations/shiftValidations.js";
@@ -20,6 +20,13 @@ router.put("/submit/:shiftId",helper,roleAuthorization("operator", "shift_inchar
 router.put("/approve/:shiftId",helper,roleAuthorization("shift_incharge", "hod", "admin"),approveShift);
 
 router.put("/lock/:shiftId",helper,roleAuthorization("hod", "admin"),lockShift);
+
+router.patch(
+  "/:shiftId/handover",
+  helper,
+  roleAuthorization("operator", "shift_incharge", "admin"),
+  updateHandoverRemarks
+);
 
 
 export default router;

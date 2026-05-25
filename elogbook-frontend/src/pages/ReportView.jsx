@@ -129,6 +129,17 @@ function ReportView() {
           </div>
         </div>
 
+        {/* HANDOVER */}
+        <div style={styles.card}>
+          <div style={styles.sectionHeader}>
+            <h2 style={styles.sectionTitle}>Shift Handover</h2>
+          </div>
+
+          <div style={styles.handoverBox}>
+            {shift?.handoverRemarks || "No handover remarks recorded"}
+          </div>
+        </div>
+
         <div style={styles.grid}>
           {/* PARAMETERS */}
           <div style={styles.card}>
@@ -399,6 +410,15 @@ const styles = {
   listWrap: {
     display: "grid",
     gap: "12px",
+  },
+  handoverBox: {
+    background: "#f8fafc",
+    border: "1px solid #e2e8f0",
+    borderRadius: "16px",
+    padding: "16px",
+    color: "#334155",
+    lineHeight: 1.7,
+    whiteSpace: "pre-wrap",
   },
   listItem: {
     background: "#f8fafc",
