@@ -3,6 +3,7 @@ import AuditLog from "../models/AuditLog.model.js";
 export const logAudit = async ({
   action,
   module,
+  entity,
   entityId = null,
   userId = null,
   userRole = null,
@@ -14,7 +15,7 @@ export const logAudit = async ({
   try {
     await AuditLog.create({
       action,
-      module,
+      module: module || entity,
       entityId,
       user: userId,
       userRole,

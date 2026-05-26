@@ -67,6 +67,12 @@ function MainLayout({ children }) {
           <NavLink to="/ml/anomaly" style={linkStyle}>
             ML Anomaly
           </NavLink>
+
+          {(role === "admin" || role === "hod") && (
+            <NavLink to="/audit" style={linkStyle}>
+              Audit Log
+            </NavLink>
+          )}
         </nav>
 
         <div style={styles.sidebarFooter}>

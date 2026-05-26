@@ -12,6 +12,7 @@ import ReportView from "./pages/ReportView.jsx";
 import Analytics from "./pages/Analytics.jsx";
 import ParameterTemplate from "./pages/ParameterTemplate.jsx";
 import AnomalyView from "./pages/AnomalyView.jsx";
+import AuditLog from "./pages/AuditLog.jsx";
 
 function App() {
   return (
@@ -103,6 +104,17 @@ function App() {
             <ProtectedRoute>
               <MainLayout>
                 <AnomalyView />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/audit"
+          element={
+            <ProtectedRoute roles={["admin", "hod"]}>
+              <MainLayout>
+                <AuditLog />
               </MainLayout>
             </ProtectedRoute>
           }

@@ -11,6 +11,7 @@ const auditLogSchema = new mongoose.Schema(
         "SUBMIT",
         "APPROVE",
         "LOCK",
+        "UPDATE_HANDOVER",
         "LOGIN",
         "LOGOUT"
       ],
