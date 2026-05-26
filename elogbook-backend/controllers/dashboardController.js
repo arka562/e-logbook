@@ -9,6 +9,8 @@ export const getDashboardSummary = async (req, res) => {
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const yesterday = new Date();
+    yesterday.setHours(yesterday.getHours() - 24);
 
     const filterShift = {
       createdAt: { $gte: today }, 
@@ -33,7 +35,11 @@ export const getDashboardSummary = async (req, res) => {
       wipIssues,
       closedIssues,
       totalEventsToday,
-      totalEntriesToday
+      totalEntriesToday,
+      pendingApprovalShifts,
+      criticalOpenIssues,
+      missingHandoverShifts,
+      oldUnresolvedIssues
     ] = await Promise.all([
       Shift.countDocuments(filterShift),
 
@@ -50,6 +56,42 @@ export const getDashboardSummary = async (req, res) => {
         ...filterEntry,
         createdAt: { $gte: today },
       }),
+
+      Shift.find({ status: "submitted" })
+        .populate("plant", "name")
+        .populate("unit", "name")
+        .sort({ updatedAt: -1 })
+        .limit(5),
+
+      Issue.find({
+        status: { $in: ["open", "wip"] },
+        priority: "critical",
+      })
+        .populate("unit", "name")
+        .populate("department", "name")
+        .sort({ createdAt: -1 })
+        .limit(5),
+
+      Shift.find({
+        status: { $in: ["submitted", "approved"] },
+        $or: [
+          { handoverRemarks: { $exists: false } },
+          { handoverRemarks: "" },
+        ],
+      })
+        .populate("plant", "name")
+        .populate("unit", "name")
+        .sort({ updatedAt: -1 })
+        .limit(5),
+
+      Issue.find({
+        status: { $in: ["open", "wip"] },
+        createdAt: { $lte: yesterday },
+      })
+        .populate("unit", "name")
+        .populate("department", "name")
+        .sort({ createdAt: 1 })
+        .limit(5),
     ]);
 
     res.status(200).json({
@@ -63,6 +105,12 @@ export const getDashboardSummary = async (req, res) => {
         },
         events: { today: totalEventsToday },
         parameterEntries: { today: totalEntriesToday },
+        pendingWork: {
+          pendingApprovalShifts,
+          criticalOpenIssues,
+          missingHandoverShifts,
+          oldUnresolvedIssues,
+        },
       },
     });
 

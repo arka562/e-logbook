@@ -13,6 +13,7 @@ import Analytics from "./pages/Analytics.jsx";
 import ParameterTemplate from "./pages/ParameterTemplate.jsx";
 import AnomalyView from "./pages/AnomalyView.jsx";
 import AuditLog from "./pages/AuditLog.jsx";
+import DateRangeReport from "./pages/DateRangeReport.jsx";
 
 function App() {
   return (
@@ -115,6 +116,17 @@ function App() {
             <ProtectedRoute roles={["admin", "hod"]}>
               <MainLayout>
                 <AuditLog />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/reports/range"
+          element={
+            <ProtectedRoute roles={["admin", "hod", "shift_incharge"]}>
+              <MainLayout>
+                <DateRangeReport />
               </MainLayout>
             </ProtectedRoute>
           }

@@ -60,6 +60,12 @@ function MainLayout({ children }) {
             Analytics
           </NavLink>
 
+          {(role === "admin" || role === "hod" || role === "shift_incharge") && (
+            <NavLink to="/reports/range" style={linkStyle}>
+              Range Reports
+            </NavLink>
+          )}
+
           <NavLink to="/parameters" style={linkStyle}>
             Parameters
           </NavLink>

@@ -37,6 +37,7 @@ function Dashboard() {
   const issues = data?.issues || {};
   const events = data?.events || {};
   const parameterEntries = data?.parameterEntries || {};
+  const pendingWork = data?.pendingWork || {};
 
   const issueTotal = useMemo(() => {
     return (issues.open ?? 0) + (issues.wip ?? 0) + (issues.closed ?? 0);
@@ -164,6 +165,82 @@ function Dashboard() {
           </div>
         </div>
 
+        <div style={styles.pendingPanel}>
+          <div style={styles.panelHeader}>
+            <div>
+              <h3 style={styles.panelTitle}>Pending Work</h3>
+              <p style={styles.panelSubtitle}>
+                Items that need attention from operations and management
+              </p>
+            </div>
+            <div style={styles.pill}>Action Queue</div>
+          </div>
+
+          <div style={styles.pendingGrid}>
+            <PendingList
+              title="Pending Approvals"
+              items={pendingWork.pendingApprovalShifts || []}
+              emptyText="No shifts waiting for approval"
+              renderItem={(shift) => (
+                <>
+                  <strong>Shift {shift.shiftType}</strong>
+                  <span>{shift.plant?.name || "-"} / {shift.unit?.name || "-"}</span>
+                  <button
+                    style={styles.inlineBtn}
+                    onClick={() => navigate(`/shifts/${shift._id}`)}
+                  >
+                    Open
+                  </button>
+                </>
+              )}
+            />
+
+            <PendingList
+              title="Critical Issues"
+              items={pendingWork.criticalOpenIssues || []}
+              emptyText="No open critical issues"
+              renderItem={(issue) => (
+                <>
+                  <strong>{issue.equipment || "Equipment"}</strong>
+                  <span>{issue.department?.name || "-"} / {issue.status}</span>
+                  <span>{issue.description}</span>
+                </>
+              )}
+            />
+
+            <PendingList
+              title="Missing Handovers"
+              items={pendingWork.missingHandoverShifts || []}
+              emptyText="All required handovers are filled"
+              renderItem={(shift) => (
+                <>
+                  <strong>Shift {shift.shiftType}</strong>
+                  <span>{shift.plant?.name || "-"} / {shift.unit?.name || "-"}</span>
+                  <button
+                    style={styles.inlineBtn}
+                    onClick={() => navigate(`/shifts/${shift._id}`)}
+                  >
+                    Add Handover
+                  </button>
+                </>
+              )}
+            />
+
+            <PendingList
+              title="Older Than 24h"
+              items={pendingWork.oldUnresolvedIssues || []}
+              emptyText="No unresolved issues older than 24 hours"
+              renderItem={(issue) => (
+                <>
+                  <strong>{issue.equipment || "Equipment"}</strong>
+                  <span>{issue.department?.name || "-"} / {issue.status}</span>
+                  <span>{issue.createdAt ? new Date(issue.createdAt).toLocaleString() : "-"}</span>
+                </>
+              )}
+            />
+          </div>
+        </div>
+
         <div style={styles.actions}>
           <button
             style={styles.primaryBtn}
@@ -187,6 +264,29 @@ function Dashboard() {
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function PendingList({ title, items, emptyText, renderItem }) {
+  return (
+    <div style={styles.pendingCard}>
+      <div style={styles.pendingTitleRow}>
+        <h4 style={styles.pendingTitle}>{title}</h4>
+        <span style={styles.pendingCount}>{items.length}</span>
+      </div>
+
+      {items.length === 0 ? (
+        <div style={styles.pendingEmpty}>{emptyText}</div>
+      ) : (
+        <div style={styles.pendingItems}>
+          {items.map((item) => (
+            <div key={item._id} style={styles.pendingItem}>
+              {renderItem(item)}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -359,6 +459,85 @@ const styles = {
     color: "#0f172a",
     fontSize: "14px",
     fontWeight: 700,
+  },
+  pendingPanel: {
+    marginTop: "24px",
+    background: "rgba(255,255,255,0.85)",
+    border: "1px solid rgba(148,163,184,0.22)",
+    borderRadius: "22px",
+    padding: "22px",
+    boxShadow: "0 18px 40px rgba(15, 23, 42, 0.06)",
+    backdropFilter: "blur(10px)",
+  },
+  pendingGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+    gap: "14px",
+  },
+  pendingCard: {
+    background: "#f8fafc",
+    border: "1px solid #e2e8f0",
+    borderRadius: "16px",
+    padding: "16px",
+  },
+  pendingTitleRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: "10px",
+    marginBottom: "12px",
+  },
+  pendingTitle: {
+    margin: 0,
+    color: "#0f172a",
+    fontSize: "16px",
+  },
+  pendingCount: {
+    minWidth: "28px",
+    height: "28px",
+    borderRadius: "999px",
+    background: "#dbeafe",
+    color: "#1d4ed8",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "13px",
+    fontWeight: 800,
+  },
+  pendingItems: {
+    display: "grid",
+    gap: "10px",
+  },
+  pendingItem: {
+    display: "grid",
+    gap: "4px",
+    padding: "12px",
+    borderRadius: "12px",
+    background: "#fff",
+    border: "1px solid #e2e8f0",
+    color: "#475569",
+    fontSize: "13px",
+    lineHeight: 1.4,
+  },
+  pendingEmpty: {
+    padding: "14px",
+    borderRadius: "12px",
+    color: "#64748b",
+    border: "1px dashed #cbd5e1",
+    background: "#fff",
+    fontSize: "13px",
+  },
+  inlineBtn: {
+    justifySelf: "start",
+    marginTop: "6px",
+    padding: "6px 10px",
+    border: "none",
+    borderRadius: "8px",
+    background: "#2563eb",
+    color: "#fff",
+    fontWeight: 700,
+    cursor: "pointer",
+    fontSize: "12px",
   },
   actions: {
     marginTop: "24px",
