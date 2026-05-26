@@ -115,8 +115,14 @@ export const generateShiftPDF = (res, reportData) => {
   } else {
     issues.forEach((i) => {
       doc.text(
-        `${i.equipment} | Status: ${i.status} | ${i.description}`
+        `${i.equipment} | Priority: ${i.priority || "medium"} | Status: ${
+          i.status
+        } | ${i.description}`
       );
+
+      if (i.closureRemarks) {
+        doc.text(`Closure: ${i.closureRemarks}`);
+      }
     });
   }
 

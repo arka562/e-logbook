@@ -32,6 +32,12 @@ const issueSchema = new mongoose.Schema(
       trim: true
     },
 
+    priority: {
+      type: String,
+      enum: ["low", "medium", "high", "critical"],
+      default: "medium"
+    },
+
     status: {
       type: String,
       enum: ["open", "wip", "closed"],
@@ -51,6 +57,11 @@ const issueSchema = new mongoose.Schema(
 
     resolvedAt: {
       type: Date
+    },
+
+    closureRemarks: {
+      type: String,
+      trim: true
     }
   },
   { timestamps: true }

@@ -6,7 +6,8 @@ import Department from "../models/Department.model.js";
 
 export const createIssue = async (req, res) => {
   try {
-    const { shiftId, unitId, equipment, description, department } = req.body;
+    const { shiftId, unitId, equipment, description, department, priority = "medium" } = req.body;
+    const validPriorities = ["low", "medium", "high", "critical"];
 
     // ✅ Auth check
     if (!req.user) {
@@ -21,6 +22,13 @@ export const createIssue = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "All required fields must be provided",
+      });
+    }
+
+    if (!validPriorities.includes(priority)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid issue priority",
       });
     }
 
@@ -86,6 +94,7 @@ export const createIssue = async (req, res) => {
       department,
       equipment,
       description,
+      priority,
       createdBy: req.user._id,
     });
 
@@ -207,7 +216,7 @@ export const getIssuesByShift = async (req, res) => {
 export const updateIssueStatus = async (req, res) => {
   try {
     const { issueId } = req.params;
-    const { status } = req.body;
+    const { status, closureRemarks } = req.body;
 
     const validStatuses = ["open", "wip", "closed"];
 
@@ -241,6 +250,13 @@ export const updateIssueStatus = async (req, res) => {
       });
     }
 
+    if (status === "closed" && (!closureRemarks || !closureRemarks.trim())) {
+      return res.status(400).json({
+        success: false,
+        message: "Closure remarks are required to close an issue"
+      });
+    }
+
     if (issue.status === "open" && status === "wip") {
       issue.status = "wip";
     }
@@ -248,12 +264,14 @@ export const updateIssueStatus = async (req, res) => {
       issue.status = "closed";
       issue.resolvedBy = req.user._id;
       issue.resolvedAt = new Date();
+      issue.closureRemarks = closureRemarks.trim();
     }
     else if (issue.status === "open" && status === "closed") {
       if (["admin", "hod"].includes(req.user.role)) {
         issue.status = "closed";
         issue.resolvedBy = req.user._id;
         issue.resolvedAt = new Date();
+        issue.closureRemarks = closureRemarks.trim();
       } else {
         return res.status(403).json({
           success: false,

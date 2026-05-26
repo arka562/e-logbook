@@ -243,7 +243,15 @@ function ReportView() {
                       <div style={styles.issueEquipment}>
                         {i.equipment || "Equipment"}
                       </div>
+                      <div style={styles.issueMeta}>
+                        Priority: {(i.priority || "medium").toUpperCase()}
+                      </div>
                       <div style={styles.issueDesc}>{i.description}</div>
+                      {i.closureRemarks && (
+                        <div style={styles.closureRemarks}>
+                          Closure: {i.closureRemarks}
+                        </div>
+                      )}
                     </div>
 
                     <span
@@ -483,6 +491,20 @@ const styles = {
   issueDesc: {
     color: "#475569",
     lineHeight: 1.6,
+  },
+  issueMeta: {
+    color: "#64748b",
+    fontSize: "13px",
+    fontWeight: 700,
+    marginBottom: "6px",
+  },
+  closureRemarks: {
+    marginTop: "8px",
+    padding: "10px 12px",
+    borderRadius: "12px",
+    background: "#f1f5f9",
+    color: "#334155",
+    lineHeight: 1.5,
   },
   statusPill: {
     padding: "8px 12px",

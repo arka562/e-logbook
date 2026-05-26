@@ -10,6 +10,8 @@ function ShiftDetails() {
   const [values, setValues] = useState({});
   const [eventText, setEventText] = useState("");
   const [issueText, setIssueText] = useState("");
+  const [issuePriority, setIssuePriority] = useState("medium");
+  const [closureRemarksByIssue, setClosureRemarksByIssue] = useState({});
   const [departments, setDepartments] = useState([]);
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [handoverRemarks, setHandoverRemarks] = useState("");
@@ -176,10 +178,12 @@ function ShiftDetails() {
         equipment: "Equipment",
         description: issueText,
         department: selectedDepartment,
+        priority: issuePriority,
       });
 
       setIssueText("");
       setSelectedDepartment("");
+      setIssuePriority("medium");
       fetchReport();
     } catch (error) {
       console.error(error);
@@ -188,10 +192,21 @@ function ShiftDetails() {
   };
 
   // ================= ISSUE STATUS UPDATE =================
-  const updateIssueStatus = async (issueId, newStatus) => {
+  const updateIssueStatus = async (issueId, newStatus, closureRemarks = "") => {
+    if (newStatus === "closed" && !closureRemarks.trim()) {
+      alert("Please enter closure remarks");
+      return;
+    }
+
     try {
       await api.patch(`/issues/${issueId}/status`, {
         status: newStatus,
+        closureRemarks,
+      });
+
+      setClosureRemarksByIssue({
+        ...closureRemarksByIssue,
+        [issueId]: "",
       });
 
       fetchReport();
@@ -296,6 +311,17 @@ function ShiftDetails() {
               style={styles.input}
             />
 
+            <select
+              value={issuePriority}
+              onChange={(e) => setIssuePriority(e.target.value)}
+              style={styles.input}
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+            </select>
+
             <button onClick={addIssue} style={styles.btn}>
               Add Issue
             </button>
@@ -306,14 +332,21 @@ function ShiftDetails() {
           <thead>
             <tr>
               <th>Equipment</th>
+              <th>Priority</th>
               <th>Status</th>
               <th>Description</th>
+              <th>Closure Remarks</th>
             </tr>
           </thead>
           <tbody>
             {report.issues?.map((i) => (
               <tr key={i._id}>
                 <td>{i.equipment}</td>
+                <td>
+                  <span style={getPriorityStyle(i.priority)}>
+                    {i.priority || "medium"}
+                  </span>
+                </td>
                 <td>
                   <span style={getStatusStyle(i.status)}>{i.status}</span>
 
@@ -329,17 +362,38 @@ function ShiftDetails() {
                       )}
 
                       {i.status === "wip" && (
-                        <button
-                          onClick={() => updateIssueStatus(i._id, "closed")}
-                          style={styles.smallBtn}
-                        >
-                          Close
-                        </button>
+                        <>
+                          <input
+                            placeholder="Closure remarks"
+                            value={closureRemarksByIssue[i._id] || ""}
+                            onChange={(e) =>
+                              setClosureRemarksByIssue({
+                                ...closureRemarksByIssue,
+                                [i._id]: e.target.value,
+                              })
+                            }
+                            style={styles.smallInput}
+                          />
+
+                          <button
+                            onClick={() =>
+                              updateIssueStatus(
+                                i._id,
+                                "closed",
+                                closureRemarksByIssue[i._id] || ""
+                              )
+                            }
+                            style={styles.smallBtn}
+                          >
+                            Close
+                          </button>
+                        </>
                       )}
                     </div>
                   )}
                 </td>
                 <td>{i.description}</td>
+                <td>{i.closureRemarks || "-"}</td>
               </tr>
             ))}
           </tbody>
@@ -425,6 +479,13 @@ const getStatusStyle = (status) => {
   if (status === "wip") return { color: "orange" };
   if (status === "closed") return { color: "green" };
   return {};
+};
+
+const getPriorityStyle = (priority) => {
+  if (priority === "critical") return { ...styles.priorityBadge, background: "#fee2e2", color: "#991b1b" };
+  if (priority === "high") return { ...styles.priorityBadge, background: "#ffedd5", color: "#9a3412" };
+  if (priority === "low") return { ...styles.priorityBadge, background: "#e0f2fe", color: "#075985" };
+  return { ...styles.priorityBadge, background: "#e2e8f0", color: "#334155" };
 };
 
 const getParameterValueStatus = (value, parameter) => {
@@ -520,6 +581,20 @@ const styles = {
     background: "#555",
     color: "#fff",
     cursor: "pointer",
+  },
+  smallInput: {
+    padding: "4px 8px",
+    fontSize: "12px",
+    border: "1px solid #cbd5e1",
+    borderRadius: "4px",
+  },
+  priorityBadge: {
+    display: "inline-block",
+    padding: "4px 8px",
+    borderRadius: "999px",
+    fontSize: "12px",
+    fontWeight: 700,
+    textTransform: "uppercase",
   },
 };
 
