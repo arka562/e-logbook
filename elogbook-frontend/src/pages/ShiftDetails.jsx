@@ -369,21 +369,43 @@ function ShiftDetails() {
         ) : (
           parameters.map((p) => (
             <div key={p._id} style={styles.parameterRow}>
-              <b>{p.name}</b>
+              <div style={styles.parameterName}>
+                <b>{p.name}</b>
+                <span style={styles.parameterMeta}>
+                  {p.unit ? `Unit: ${p.unit}` : "No unit"}
+                  {p.minValue !== undefined || p.maxValue !== undefined
+                    ? ` | Safe: ${p.minValue ?? "-"} - ${p.maxValue ?? "-"}`
+                    : ""}
+                </span>
+              </div>
 
-              <input
-                placeholder="Unit 1"
-                disabled={isLocked}
-                onChange={(e) => handleChange(p._id, "unit1", e.target.value)}
-                style={styles.input}
-              />
+              <div style={styles.valueBox}>
+                <input
+                  placeholder="Unit 1"
+                  disabled={isLocked}
+                  onChange={(e) => handleChange(p._id, "unit1", e.target.value)}
+                  style={styles.input}
+                />
+                {getParameterValueStatus(values[p._id]?.unit1, p) && (
+                  <span style={getParameterValueStatus(values[p._id]?.unit1, p).style}>
+                    {getParameterValueStatus(values[p._id]?.unit1, p).label}
+                  </span>
+                )}
+              </div>
 
-              <input
-                placeholder="Unit 2"
-                disabled={isLocked}
-                onChange={(e) => handleChange(p._id, "unit2", e.target.value)}
-                style={styles.input}
-              />
+              <div style={styles.valueBox}>
+                <input
+                  placeholder="Unit 2"
+                  disabled={isLocked}
+                  onChange={(e) => handleChange(p._id, "unit2", e.target.value)}
+                  style={styles.input}
+                />
+                {getParameterValueStatus(values[p._id]?.unit2, p) && (
+                  <span style={getParameterValueStatus(values[p._id]?.unit2, p).style}>
+                    {getParameterValueStatus(values[p._id]?.unit2, p).label}
+                  </span>
+                )}
+              </div>
 
               {!isLocked && (
                 <button onClick={() => saveParameter(p._id)} style={styles.btn}>
@@ -405,6 +427,44 @@ const getStatusStyle = (status) => {
   return {};
 };
 
+const getParameterValueStatus = (value, parameter) => {
+  if (value === undefined || value === "") {
+    return null;
+  }
+
+  const numericValue = Number(value);
+
+  if (Number.isNaN(numericValue)) {
+    return {
+      label: "Text value",
+      style: styles.neutralBadge,
+    };
+  }
+
+  if (parameter.minValue !== undefined && numericValue < parameter.minValue) {
+    return {
+      label: `Below min ${parameter.minValue}`,
+      style: styles.dangerBadge,
+    };
+  }
+
+  if (parameter.maxValue !== undefined && numericValue > parameter.maxValue) {
+    return {
+      label: `Above max ${parameter.maxValue}`,
+      style: styles.dangerBadge,
+    };
+  }
+
+  if (parameter.minValue !== undefined || parameter.maxValue !== undefined) {
+    return {
+      label: "Within range",
+      style: styles.safeBadge,
+    };
+  }
+
+  return null;
+};
+
 const styles = {
   container: { padding: 40 },
   card: { background: "#fff", padding: 20, marginBottom: 20, borderRadius: 8 },
@@ -421,6 +481,37 @@ const styles = {
   btn: { padding: "8px 12px", background: "#1976d2", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer" },
   table: { width: "100%", borderCollapse: "collapse" },
   parameterRow: { display: "flex", gap: 10, marginBottom: 10, alignItems: "center" },
+  parameterName: {
+    minWidth: 180,
+  },
+  parameterMeta: {
+    display: "block",
+    marginTop: 4,
+    color: "#64748b",
+    fontSize: 12,
+    fontWeight: 400,
+  },
+  valueBox: {
+    flex: 1,
+    display: "flex",
+    flexDirection: "column",
+    gap: 5,
+  },
+  safeBadge: {
+    color: "#166534",
+    fontSize: 12,
+    fontWeight: 700,
+  },
+  dangerBadge: {
+    color: "#b91c1c",
+    fontSize: 12,
+    fontWeight: 700,
+  },
+  neutralBadge: {
+    color: "#475569",
+    fontSize: 12,
+    fontWeight: 700,
+  },
   smallBtn: {
     padding: "4px 8px",
     fontSize: "12px",

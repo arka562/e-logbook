@@ -23,6 +23,12 @@ const parameterTemplateSchema = new mongoose.Schema(
     designValue: {
       type: String,
     },
+    minValue: {
+      type: Number,
+    },
+    maxValue: {
+      type: Number,
+    },
     plant: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Plant",

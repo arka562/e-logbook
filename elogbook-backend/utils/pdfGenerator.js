@@ -1,5 +1,41 @@
 import PDFDocument from "pdfkit";
 
+const getValueStatus = (value, parameter) => {
+  if (value === undefined || value === "") return "No value";
+
+  const numericValue = Number(value);
+
+  if (Number.isNaN(numericValue)) return "Text";
+  if (parameter?.minValue !== undefined && numericValue < parameter.minValue) {
+    return "Below range";
+  }
+  if (parameter?.maxValue !== undefined && numericValue > parameter.maxValue) {
+    return "Above range";
+  }
+
+  return "Normal";
+};
+
+const getEntryStatus = (entry) => {
+  const unit1Status = getValueStatus(entry.unit1Value, entry.parameter);
+  const unit2Status = getValueStatus(entry.unit2Value, entry.parameter);
+
+  if (unit1Status === "Below range" || unit2Status === "Below range") {
+    return "Out of range";
+  }
+  if (unit1Status === "Above range" || unit2Status === "Above range") {
+    return "Out of range";
+  }
+  if (
+    entry.parameter?.minValue !== undefined ||
+    entry.parameter?.maxValue !== undefined
+  ) {
+    return "Normal";
+  }
+
+  return "No limits";
+};
+
 export const generateShiftPDF = (res, reportData) => {
   const doc = new PDFDocument({ margin: 40 });
 
@@ -43,8 +79,15 @@ export const generateShiftPDF = (res, reportData) => {
     doc.text("No parameter entries recorded.");
   } else {
     parameters.forEach((p) => {
+      const safeRange =
+        p.parameter?.minValue !== undefined || p.parameter?.maxValue !== undefined
+          ? `${p.parameter?.minValue ?? "-"} - ${p.parameter?.maxValue ?? "-"}`
+          : "No limits";
+
       doc.text(
-        `${p.parameter?.name} | Unit1: ${p.unit1Value ?? "-"} | Unit2: ${p.unit2Value ?? "-"}`
+        `${p.parameter?.name} | Safe: ${safeRange} | Unit1: ${
+          p.unit1Value ?? "-"
+        } | Unit2: ${p.unit2Value ?? "-"} | Status: ${getEntryStatus(p)}`
       );
     });
   }

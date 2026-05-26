@@ -153,25 +153,44 @@ function ReportView() {
                 <thead>
                   <tr>
                     <th style={th}>Parameter</th>
+                    <th style={th}>Safe Range</th>
                     <th style={th}>Unit 1</th>
                     <th style={th}>Unit 2</th>
+                    <th style={th}>Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {parameters.length === 0 ? (
                     <tr>
-                      <td colSpan="3" style={styles.tdEmpty}>
+                      <td colSpan="5" style={styles.tdEmpty}>
                         No parameters recorded
                       </td>
                     </tr>
                   ) : (
-                    parameters.map((p) => (
-                      <tr key={p._id}>
-                        <td style={styles.tdBold}>{p.parameter?.name || "N/A"}</td>
-                        <td style={styles.td}>{p.unit1Value || "-"}</td>
-                        <td style={styles.td}>{p.unit2Value || "-"}</td>
-                      </tr>
-                    ))
+                    parameters.map((p) => {
+                      const valueStatus = getSavedParameterStatus(p);
+
+                      return (
+                        <tr key={p._id}>
+                          <td style={styles.tdBold}>{p.parameter?.name || "N/A"}</td>
+                          <td style={styles.td}>
+                            {p.parameter?.minValue !== undefined ||
+                            p.parameter?.maxValue !== undefined
+                              ? `${p.parameter?.minValue ?? "-"} - ${
+                                  p.parameter?.maxValue ?? "-"
+                                }`
+                              : "-"}
+                          </td>
+                          <td style={styles.td}>{p.unit1Value || "-"}</td>
+                          <td style={styles.td}>{p.unit2Value || "-"}</td>
+                          <td style={styles.td}>
+                            <span style={valueStatus.style}>
+                              {valueStatus.label}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -472,6 +491,36 @@ const styles = {
     fontWeight: 700,
     whiteSpace: "nowrap",
   },
+  reportSafeBadge: {
+    display: "inline-block",
+    padding: "6px 10px",
+    borderRadius: "999px",
+    background: "#dcfce7",
+    color: "#166534",
+    fontSize: "12px",
+    fontWeight: 700,
+    whiteSpace: "nowrap",
+  },
+  reportAlertBadge: {
+    display: "inline-block",
+    padding: "6px 10px",
+    borderRadius: "999px",
+    background: "#fee2e2",
+    color: "#b91c1c",
+    fontSize: "12px",
+    fontWeight: 700,
+    whiteSpace: "nowrap",
+  },
+  reportNeutralBadge: {
+    display: "inline-block",
+    padding: "6px 10px",
+    borderRadius: "999px",
+    background: "#e2e8f0",
+    color: "#475569",
+    fontSize: "12px",
+    fontWeight: 700,
+    whiteSpace: "nowrap",
+  },
   loadingCard: {
     maxWidth: "420px",
     margin: "100px auto",
@@ -523,6 +572,55 @@ const th = {
   textAlign: "left",
   color: "#334155",
   fontSize: "14px",
+};
+
+const getSingleValueStatus = (value, parameter) => {
+  if (value === undefined || value === "") {
+    return "empty";
+  }
+
+  const numericValue = Number(value);
+
+  if (Number.isNaN(numericValue)) {
+    return "normal";
+  }
+
+  if (parameter?.minValue !== undefined && numericValue < parameter.minValue) {
+    return "alert";
+  }
+
+  if (parameter?.maxValue !== undefined && numericValue > parameter.maxValue) {
+    return "alert";
+  }
+
+  return "normal";
+};
+
+const getSavedParameterStatus = (entry) => {
+  const unit1Status = getSingleValueStatus(entry.unit1Value, entry.parameter);
+  const unit2Status = getSingleValueStatus(entry.unit2Value, entry.parameter);
+
+  if (unit1Status === "alert" || unit2Status === "alert") {
+    return {
+      label: "Out of range",
+      style: styles.reportAlertBadge,
+    };
+  }
+
+  if (
+    entry.parameter?.minValue !== undefined ||
+    entry.parameter?.maxValue !== undefined
+  ) {
+    return {
+      label: "Normal",
+      style: styles.reportSafeBadge,
+    };
+  }
+
+  return {
+    label: "No limits",
+    style: styles.reportNeutralBadge,
+  };
 };
 
 export default ReportView;

@@ -6,6 +6,8 @@ function ParameterTemplate() {
   const [category, setCategory] = useState("shift_parameters");
   const [unit, setUnit] = useState("");
   const [designValue, setDesignValue] = useState("");
+  const [minValue, setMinValue] = useState("");
+  const [maxValue, setMaxValue] = useState("");
   const [plant, setPlant] = useState("");
 
   const [plants, setPlants] = useState([]);
@@ -74,6 +76,8 @@ function ParameterTemplate() {
         category,
         unit,
         designValue,
+        minValue,
+        maxValue,
         plant,
       });
 
@@ -82,6 +86,8 @@ function ParameterTemplate() {
       setName("");
       setUnit("");
       setDesignValue("");
+      setMinValue("");
+      setMaxValue("");
 
       fetchTemplates();
 
@@ -297,6 +303,36 @@ function ParameterTemplate() {
                 />
               </div>
 
+              <div style={styles.limitGrid}>
+                <div style={styles.field}>
+                  <label style={styles.label}>
+                    Min Safe Value
+                  </label>
+
+                  <input
+                    placeholder="Example: 480"
+                    type="number"
+                    value={minValue}
+                    onChange={(e) => setMinValue(e.target.value)}
+                    style={styles.input}
+                  />
+                </div>
+
+                <div style={styles.field}>
+                  <label style={styles.label}>
+                    Max Safe Value
+                  </label>
+
+                  <input
+                    placeholder="Example: 560"
+                    type="number"
+                    value={maxValue}
+                    onChange={(e) => setMaxValue(e.target.value)}
+                    style={styles.input}
+                  />
+                </div>
+              </div>
+
               {/* BUTTON */}
               <button
                 type="submit"
@@ -347,6 +383,7 @@ function ParameterTemplate() {
                       <th>Category</th>
                       <th>Unit</th>
                       <th>Design</th>
+                      <th>Limits</th>
                       <th>Plant</th>
                     </tr>
                   </thead>
@@ -380,6 +417,12 @@ function ParameterTemplate() {
 
                           <td>
                             {t.designValue || "-"}
+                          </td>
+
+                          <td>
+                            {t.minValue !== undefined || t.maxValue !== undefined
+                              ? `${t.minValue ?? "-"} - ${t.maxValue ?? "-"}`
+                              : "-"}
                           </td>
 
                           <td>
@@ -536,6 +579,12 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     gap: "18px",
+  },
+
+  limitGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gap: "14px",
   },
 
   field: {

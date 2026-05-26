@@ -4,12 +4,38 @@ import Plant from "../models/Plant.model.js";
 
 
 export const createParameterTemplate = async (req, res) => {
-    const { name, category, unit, designValue, plant } = req.body;
+    const { name, category, unit, designValue, minValue, maxValue, plant } = req.body;
 
     if (!name || !category || !plant) {
       return res.status(400).json({
         success: false,
         message: "Name, category and plant are required"
+      });
+    }
+
+    const parsedMinValue =
+      minValue === undefined || minValue === "" ? undefined : Number(minValue);
+    const parsedMaxValue =
+      maxValue === undefined || maxValue === "" ? undefined : Number(maxValue);
+
+    if (
+      (parsedMinValue !== undefined && Number.isNaN(parsedMinValue)) ||
+      (parsedMaxValue !== undefined && Number.isNaN(parsedMaxValue))
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Min and max values must be valid numbers"
+      });
+    }
+
+    if (
+      parsedMinValue !== undefined &&
+      parsedMaxValue !== undefined &&
+      parsedMinValue > parsedMaxValue
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Min value cannot be greater than max value"
       });
     }
 
@@ -39,6 +65,8 @@ export const createParameterTemplate = async (req, res) => {
       category,
       unit,
       designValue,
+      minValue: parsedMinValue,
+      maxValue: parsedMaxValue,
       plant,
       createdBy: req.user?._id
     });
