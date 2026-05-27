@@ -1,12 +1,13 @@
 {
-  "name": "elogbook-backend",
+  "name": "adani-power-backend",
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "build": "echo \"No build step required\""
+    "build": "echo \"No build step required\"",
+    "seed:demo": "node scripts/seedDemoData.js"
   },
   "keywords": [],
   "author": "",

@@ -48,7 +48,7 @@ function Login() {
           </p>
 
           <div style={styles.featureList}>
-            <div style={styles.featureItem}>Shift logbook and issue tracking</div>
+            <div style={styles.featureItem}>Adani Power Limited shift records and issue tracking</div>
             <div style={styles.featureItem}>Analytics and anomaly detection</div>
             <div style={styles.featureItem}>Predictive maintenance insights</div>
           </div>

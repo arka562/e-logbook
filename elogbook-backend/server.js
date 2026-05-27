@@ -30,7 +30,7 @@ app.use(express.json());
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
-    message: "E-Logbook Backend Running"
+    message: "Adani Power Limited Backend Running"
   });
 });
 app.use('/api/auth', authRoutes);

@@ -51,7 +51,7 @@ export const generateShiftPDF = (res, reportData) => {
 
   doc
     .fontSize(20)
-    .text("Industrial Shift Logbook Report", { align: "center" })
+    .text("Adani Power Limited Shift Operations Report", { align: "center" })
     .moveDown(2);
 
   doc.fontSize(14).text("Shift Information", { underline: true }).moveDown(0.5);

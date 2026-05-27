@@ -220,7 +220,7 @@ function ShiftDetails() {
 
   return (
     <div style={styles.container}>
-      <h2>Shift Logbook</h2>
+      <h2>Adani Power Limited Shift Record</h2>
 
       {/* SHIFT INFO */}
       <div style={styles.card}>

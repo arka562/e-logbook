@@ -50,10 +50,10 @@ function Register() {
 
       <div style={styles.container}>
         <div style={styles.leftPanel}>
-          <div style={styles.brandBadge}>E-Logbook</div>
+          <div style={styles.brandBadge}>Adani Power Limited</div>
           <h1 style={styles.heading}>Create your industrial operations account</h1>
           <p style={styles.subText}>
-            Join the shift logbook platform to manage operations, parameters, issues, analytics, and AI-powered insights.
+            Join the Adani Power Limited operations platform to manage operations, parameters, issues, analytics, and AI-powered insights.
           </p>
 
           <div style={styles.featureList}>

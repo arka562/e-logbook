@@ -31,7 +31,7 @@ function MainLayout({ children }) {
     <div style={styles.container}>
       <aside style={styles.sidebar}>
         <div style={styles.brandBlock}>
-          <div style={styles.logo}>E-Logbook</div>
+          <div style={styles.logo}>Adani Power Limited</div>
           <p style={styles.tagline}>Industrial Operations Platform</p>
         </div>
 
