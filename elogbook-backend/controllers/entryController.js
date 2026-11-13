@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import ParameterEntry from "../models/ParameterEntry.mode.js";
 import Shift from "../models/Shift.model.js";
 import ParameterTemplate from "../models/ParameterTemplate.model.js";
+import { logAudit } from "../utils/auditLogger.js";
 
 // Validation here follows the same pattern already used by
 // issueController.createIssue and eventController.createEvent:
@@ -72,6 +73,17 @@ export const createEntry = async (req, res) => {
       parameterId,
       unit1Value,
       unit2Value,
+    });
+
+    await logAudit({
+      action: "CREATE",
+      entity: "PARAMETER",
+      entityId: entry._id,
+      userId: req.user._id,
+      userRole: req.user.role,
+      description: `Parameter entry recorded for parameter "${parameter.name}"`,
+      newData: { unit1Value, unit2Value },
+      ipAddress: req.ip,
     });
 
     res.status(201).json({
