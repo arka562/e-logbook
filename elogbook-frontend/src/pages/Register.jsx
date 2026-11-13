@@ -5,11 +5,13 @@ import api from "../api/axios";
 function Register() {
   const navigate = useNavigate();
 
+  // No role field: public registration always creates an operator
+  // account. The backend ignores any client-sent role, and privileged
+  // accounts (admin / hod / shift_incharge) are provisioned separately.
   const [form, setForm] = useState({
     name: "",
     email: "",
     password: "",
-    role: "operator",
     department: "",
   });
 
@@ -129,21 +131,6 @@ function Register() {
                 style={styles.input}
                 required
               />
-            </div>
-
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Role</label>
-              <select
-                name="role"
-                value={form.role}
-                onChange={handleChange}
-                style={styles.input}
-              >
-                <option value="operator">Operator</option>
-                <option value="shift_incharge">Shift Incharge</option>
-                <option value="hod">HOD</option>
-                <option value="admin">Admin</option>
-              </select>
             </div>
 
             <button type="submit" disabled={loading} style={styles.button}>

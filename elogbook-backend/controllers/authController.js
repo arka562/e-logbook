@@ -10,14 +10,20 @@ const generateToken = (id) => {
 };
 
 export const registerUser = async (req, res) => {
-     console.log("Body received:", req.body); 
-    const { name, email, password, role, department } = req.body;
+    // Public registration must never decide its own role or log credentials.
+    // Any `role` sent by the client is ignored on purpose: privilege
+    // escalation via role: "admin" was possible here before this fix.
+    // Admin / HOD / shift_incharge accounts are provisioned separately
+    // (admin-controlled process / seeder), never through this endpoint.
+    const { name, email, password, department } = req.body;
 
     if (!name || !email || !password || !department) {
       return res.status(400).json({ message: "Some fields are missing" });
     }
 
-    const userExist = await User.findOne({ email });
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const userExist = await User.findOne({ email: normalizedEmail });
 
     if (userExist) {
       return res.status(400).json({ message: "User already exists" });
@@ -25,9 +31,9 @@ export const registerUser = async (req, res) => {
 
     const user = await User.create({
       name,
-      email,
+      email: normalizedEmail,
       password,
-      role,
+      role: "operator",
       department
     });
 
