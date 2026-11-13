@@ -1,6 +1,8 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import testRoutes from "./routes/testRoutes.js";
@@ -21,7 +23,16 @@ dotenv.config();
 
 const app = express();
 
+// Deployed behind a single proxy (typical PaaS): trust the first
+// X-Forwarded-For hop so req.ip — used by audit logs and the rate
+// limiters below — is the real client IP, not the proxy's.
+app.set("trust proxy", 1);
+
 // Middleware
+// Security headers (X-Content-Type-Options, frame restrictions,
+// HSTS, referrer policy, etc.). This service returns JSON/PDF only,
+// so helmet's defaults are safe here.
+app.use(helmet());
 // CORS was previously cors() with no options, which reflects ANY origin.
 // Restrict it to the frontend origin. Set CLIENT_URL in the environment
 // for deployments; the fallback is the Vite dev server origin.
@@ -34,6 +45,35 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Rate limiting: a generous global cap per IP, and a strict cap on
+// the auth routes to slow credential stuffing / brute force.
+// Limits are per-IP in-memory counters (single-instance deployment);
+// a multi-instance deployment would need a shared store such as Redis.
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => req.path === "/api/health",
+  message: {
+    success: false,
+    message: "Too many requests, please try again later",
+  },
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Too many authentication attempts, please try again later",
+  },
+});
+
+app.use(globalLimiter);
+
 // Health Route
 app.get("/api/health", (req, res) => {
   res.status(200).json({
@@ -41,8 +81,8 @@ app.get("/api/health", (req, res) => {
     message: "Adani Power Limited Backend Running"
   });
 });
-app.use('/api/auth', authRoutes);
-app.use('/api/auth', testRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/auth', authLimiter, testRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/shifts", shiftRoutes);
 app.use("/api/parameters", parameterRoutes);
