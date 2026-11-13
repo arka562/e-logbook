@@ -12,7 +12,7 @@ import parameterRoutes from "./routes/parameterRoutes.js";
 import eventRoutes from "./routes/eventRoutes.js";
 import issueRoutes from "./routes/issueRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
-import { errorHandler } from "./middleware/errorMiddleware.js";
+import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 import auditRoutes from "./routes/auditRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 import entryRoute from "./routes/entryRoutes.js"
@@ -95,6 +95,7 @@ app.use("/api/reports", reportRoutes);
 app.use("/api/entries",entryRoute);
 app.use("/api/analytics", analyticsRoute);
 app.use("/api/ml", mlRoutes);
+app.use(notFound);
 app.use(errorHandler);
 // MUST BE LAST
 // app.use((err, req, res, next) => {
