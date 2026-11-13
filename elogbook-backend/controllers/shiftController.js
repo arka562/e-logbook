@@ -3,7 +3,6 @@ import Plant from "../models/Plant.model.js";
 import Unit from "../models/Unit.model.js";
 import User from "../models/User.model.js";
 import { logAudit } from "../utils/auditLogger.js";
-console.log("Controller hit");
 /* ================= CREATE SHIFT ================= */
 export const createShift = async (req, res) => {
   try {
@@ -75,6 +74,14 @@ if (unitExists.plant.toString() !== plant) {
     });
 
   } catch (error) {
+    // Unique index on (date, unit, shiftType) rejected a duplicate
+    // that raced past the findOne check above — report it the same way.
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: "Shift already exists",
+      });
+    }
     console.error("Create Shift Error:", error);
     res.status(500).json({
       success: false,
@@ -178,24 +185,32 @@ export const deleteShift = async (req, res) => {
 export const submitShift = async (req, res) => {
   try {
     const { shiftId } = req.params;
-    const shift = await Shift.findById(shiftId);
+
+    // Atomic conditional update: status check + write are ONE database
+    // operation, so two simultaneous requests cannot both pass the
+    // check (the previous find-check-save pattern allowed exactly that).
+    const shift = await Shift.findOneAndUpdate(
+      { _id: shiftId, status: "draft" },
+      {
+        $set: {
+          status: "submitted",
+          submittedBy: req.user._id,
+          submittedAt: new Date(),
+        },
+      },
+      { new: true }
+    );
 
     if (!shift) {
-      return res.status(404).json({ success: false, message: "Shift not found" });
-    }
-
-    if (shift.status !== "draft") {
+      const exists = await Shift.exists({ _id: shiftId });
+      if (!exists) {
+        return res.status(404).json({ success: false, message: "Shift not found" });
+      }
       return res.status(400).json({
         success: false,
         message: "Only draft shift can be submitted",
       });
     }
-
-    shift.status = "submitted";
-    shift.submittedBy = req.user._id;
-    shift.submittedAt = new Date();
-
-    await shift.save();
 
     await logAudit({
       action: "SUBMIT",
@@ -222,24 +237,30 @@ export const submitShift = async (req, res) => {
 export const approveShift = async (req, res) => {
   try {
     const { shiftId } = req.params;
-    const shift = await Shift.findById(shiftId);
+
+    // Atomic conditional update — see submitShift.
+    const shift = await Shift.findOneAndUpdate(
+      { _id: shiftId, status: "submitted" },
+      {
+        $set: {
+          status: "approved",
+          approvedBy: req.user._id,
+          approvedAt: new Date(),
+        },
+      },
+      { new: true }
+    );
 
     if (!shift) {
-      return res.status(404).json({ success: false, message: "Shift not found" });
-    }
-
-    if (shift.status !== "submitted") {
+      const exists = await Shift.exists({ _id: shiftId });
+      if (!exists) {
+        return res.status(404).json({ success: false, message: "Shift not found" });
+      }
       return res.status(400).json({
         success: false,
         message: "Only submitted shift can be approved",
       });
     }
-
-    shift.status = "approved";
-    shift.approvedBy = req.user._id;
-    shift.approvedAt = new Date();
-
-    await shift.save();
 
     await logAudit({
       action: "APPROVE",
@@ -266,24 +287,30 @@ export const approveShift = async (req, res) => {
 export const lockShift = async (req, res) => {
   try {
     const { shiftId } = req.params;
-    const shift = await Shift.findById(shiftId);
+
+    // Atomic conditional update — see submitShift.
+    const shift = await Shift.findOneAndUpdate(
+      { _id: shiftId, status: "approved" },
+      {
+        $set: {
+          status: "locked",
+          lockedBy: req.user._id,
+          lockedAt: new Date(),
+        },
+      },
+      { new: true }
+    );
 
     if (!shift) {
-      return res.status(404).json({ success: false, message: "Shift not found" });
-    }
-
-    if (shift.status !== "approved") {
+      const exists = await Shift.exists({ _id: shiftId });
+      if (!exists) {
+        return res.status(404).json({ success: false, message: "Shift not found" });
+      }
       return res.status(400).json({
         success: false,
         message: "Only approved shift can be locked",
       });
     }
-
-    shift.status = "locked";
-    shift.lockedBy = req.user._id;
-    shift.lockedAt = new Date();
-
-    await shift.save();
 
     await logAudit({
       action: "LOCK",

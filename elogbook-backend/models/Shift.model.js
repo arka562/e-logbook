@@ -66,6 +66,18 @@ const shiftSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// One shift per (day, unit, shift type). createShift stores `date`
+// normalized to local midnight, so exact-match uniqueness is safe.
+// This database-level index closes the race in the controller's
+// find-then-create duplicate check: two simultaneous requests can
+// both pass that check, but only one insert can win this index.
+// NOTE for existing databases: if duplicate shifts already exist,
+// this index build will fail until the duplicates are removed.
+shiftSchema.index(
+  { date: 1, unit: 1, shiftType: 1 },
+  { unique: true }
+);
+
 const Shift = mongoose.model("Shift", shiftSchema);
 
 export default Shift;
