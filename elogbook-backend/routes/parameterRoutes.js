@@ -5,6 +5,7 @@ import {
 } from "../controllers/parameterController.js";
 
 import { helper, roleAuthorization } from "../middleware/authMiddleware.js";
+import asyncHandler from "../middleware/asyncHandler.js";
 
 const router = express.Router();
 
@@ -13,14 +14,14 @@ router.post(
   "/templates",
   helper,
   roleAuthorization("admin"),
-  createParameterTemplate
+  asyncHandler(createParameterTemplate)
 );
 
 // GET
 router.get(
   "/templates",
   helper,
-  getTemplatesByCategory
+  asyncHandler(getTemplatesByCategory)
 );
 
 export default router;
