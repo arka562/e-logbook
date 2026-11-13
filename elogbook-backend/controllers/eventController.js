@@ -1,6 +1,7 @@
 import EventLog from "../models/EventLog.model.js";
 import Shift from "../models/Shift.model.js";
 import Unit from "../models/Unit.model.js";
+import { logAudit } from "../utils/auditLogger.js";
 
 import mongoose from "mongoose";
 
@@ -71,6 +72,16 @@ export const createEvent = async (req, res) => {
       unit: unitId,
       description,
       createdBy: req.user._id,
+    });
+
+    await logAudit({
+      action: "CREATE",
+      entity: "EVENT",
+      entityId: event._id,
+      userId: req.user._id,
+      userRole: req.user.role,
+      description: `Event logged: "${description}"`,
+      ipAddress: req.ip,
     });
 
     res.status(201).json({

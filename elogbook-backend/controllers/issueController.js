@@ -3,6 +3,7 @@ import Issue from "../models/Issue.model.js";
 import Shift from "../models/Shift.model.js";
 import Unit from "../models/Unit.model.js";
 import Department from "../models/Department.model.js";
+import { logAudit } from "../utils/auditLogger.js";
 
 export const createIssue = async (req, res) => {
   try {
@@ -96,6 +97,16 @@ export const createIssue = async (req, res) => {
       description,
       priority,
       createdBy: req.user._id,
+    });
+
+    await logAudit({
+      action: "CREATE",
+      entity: "ISSUE",
+      entityId: issue._id,
+      userId: req.user._id,
+      userRole: req.user.role,
+      description: `Issue created for equipment "${equipment}" (priority: ${priority})`,
+      ipAddress: req.ip,
     });
 
     return res.status(201).json({
@@ -236,6 +247,8 @@ export const updateIssueStatus = async (req, res) => {
       });
     }
 
+    const previousStatus = issue.status;
+
     if (issue.status === "closed") {
       return res.status(400).json({
         success: false,
@@ -288,6 +301,18 @@ export const updateIssueStatus = async (req, res) => {
 
     await issue.save();
 
+    await logAudit({
+      action: "UPDATE",
+      entity: "ISSUE",
+      entityId: issue._id,
+      userId: req.user._id,
+      userRole: req.user.role,
+      description: `Issue status changed from ${previousStatus} to ${issue.status}`,
+      oldData: { status: previousStatus },
+      newData: { status: issue.status },
+      ipAddress: req.ip,
+    });
+
     res.status(200).json({
       success: true,
       message: "Issue status updated",
@@ -315,6 +340,25 @@ export const deleteIssue = async (req, res) => {
     }
 
     await issue.deleteOne();
+
+    // Hard delete: after this, the audit row is the ONLY record
+    // that the issue ever existed — who deleted it and what it was
+    // must be captured here.
+    await logAudit({
+      action: "DELETE",
+      entity: "ISSUE",
+      entityId: issue._id,
+      userId: req.user._id,
+      userRole: req.user.role,
+      description: `Issue deleted (equipment: "${issue.equipment}", status was: ${issue.status})`,
+      oldData: {
+        equipment: issue.equipment,
+        description: issue.description,
+        status: issue.status,
+        priority: issue.priority,
+      },
+      ipAddress: req.ip,
+    });
 
     res.status(200).json({
       success: true,
