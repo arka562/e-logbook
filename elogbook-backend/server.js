@@ -18,12 +18,20 @@ import analyticsRoute from "./routes/analyticsRoute.js";
 import mlRoutes from "./routes/mlRoute.js";
 
 dotenv.config();
-connectDB();
 
 const app = express();
 
 // Middleware
-app.use(cors());
+// CORS was previously cors() with no options, which reflects ANY origin.
+// Restrict it to the frontend origin. Set CLIENT_URL in the environment
+// for deployments; the fallback is the Vite dev server origin.
+// The app authenticates with a Bearer token (not cookies), so
+// credentials mode is not needed.
+app.use(cors({
+  origin: process.env.CLIENT_URL || "http://localhost:5173",
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
 app.use(express.json());
 
 // Health Route
@@ -59,6 +67,21 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Start only after MongoDB is connected. Previously connectDB() was
+// fired without await and app.listen ran immediately, so requests
+// could arrive before (or without) a database connection.
+// connectDB() itself exits the process if the connection fails.
+const startServer = async () => {
+  try {
+    await connectDB();
+
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Server startup failed:", error.message);
+    process.exit(1);
+  }
+};
+
+startServer();
