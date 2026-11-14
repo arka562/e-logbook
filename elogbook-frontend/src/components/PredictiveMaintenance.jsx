@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import api from "../api/axios";
 
+// Equipment issue-frequency risk. The component/file kept its
+// original name, but the UI no longer calls this "predictive
+// maintenance" or "AI": the backend endpoint (/ml/equipment-risk)
+// is a simple issue-count bucketing, and the labels now say so.
 function PredictiveMaintenance() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -15,12 +19,12 @@ function PredictiveMaintenance() {
       setLoading(true);
       setError("");
 
-      const res = await api.get("/ml/predictive-maintenance");
+      const res = await api.get("/ml/equipment-risk");
       setData(res.data?.data || []);
     } catch (error) {
       console.log(error);
       setData([]);
-      setError(error?.response?.data?.message || "Failed to load maintenance predictions");
+      setError(error?.response?.data?.message || "Failed to load equipment risk data");
     } finally {
       setLoading(false);
     }
@@ -63,8 +67,8 @@ function PredictiveMaintenance() {
       <div style={styles.card}>
         <div style={styles.header}>
           <div>
-            <p style={styles.badge}>AI Maintenance</p>
-            <h3 style={styles.title}>Predictive Maintenance</h3>
+            <p style={styles.badge}>Issue Analytics</p>
+            <h3 style={styles.title}>Equipment Issue Frequency Risk</h3>
             <p style={styles.subtitle}>
               Equipment risk analysis based on issue frequency.
             </p>
@@ -101,10 +105,10 @@ function PredictiveMaintenance() {
         {error ? (
           <div style={styles.errorBox}>{error}</div>
         ) : loading ? (
-          <div style={styles.emptyState}>Loading predictions...</div>
+          <div style={styles.emptyState}>Loading risk data...</div>
         ) : data.length === 0 ? (
           <div style={styles.emptyState}>
-            No maintenance predictions available
+            No equipment issue data available
           </div>
         ) : (
           <div style={styles.tableWrap}>

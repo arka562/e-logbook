@@ -211,7 +211,7 @@ function Analytics() {
 
             <p style={styles.subText}>
               Monitor trends, efficiency, anomalies,
-              predictive maintenance, and operational
+              equipment issue risk, and operational
               insights in real-time.
             </p>
           </div>

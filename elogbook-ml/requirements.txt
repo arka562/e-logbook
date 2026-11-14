@@ -1,0 +1,6 @@
+# Python dependencies for the E-Logbook ML service (anomaly.py).
+# Install into the environment of the interpreter the backend spawns
+# (PYTHON_BIN, default python3):
+#   pip install -r requirements.txt
+pandas>=2.0
+scikit-learn>=1.3
