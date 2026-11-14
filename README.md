@@ -57,8 +57,8 @@ It was built to model a real plant operations workflow — the kind used in powe
 - 📈 **Analytics dashboard** — parameter trends, efficiency summaries, issue statistics
 - 🧾 **PDF report generation** — full shift reports exportable via PDFKit
 - 📅 **Date-range reporting** — cross-shift, cross-plant, cross-unit reports for management review
-- 🕵️ **Audit logging** — every critical action (create, submit, approve, lock) is logged with user, role, and IP
-- 🤖 **ML-assisted anomaly detection** — Python-based anomaly detection and predictive maintenance risk scoring
+- 🕵️ **Audit logging** — shift lifecycle transitions plus issue, event and parameter-entry mutations are logged with user, role, and IP
+- 🤖 **ML-assisted anomaly detection** — Python Isolation Forest anomaly detection, plus an equipment issue-frequency risk view (a transparent count-based heuristic, not ML)
 - 🌱 **One-command demo data seeder** — spin up realistic test data (plants, shifts, issues, users) instantly
 
 ---
@@ -114,6 +114,7 @@ e-logbook/
 │   ├── models/
 │   ├── routes/
 │   ├── scripts/        # demo data seeder
+│   ├── tests/           # regression suite (npm test) — see tests/README.md
 │   ├── utils/           # PDF generator, audit logger
 │   ├── validations/
 │   └── server.js
@@ -127,7 +128,9 @@ e-logbook/
 │       └── main.jsx
 │
 ├── elogbook-ml/
-│   └── anomaly.py
+│   ├── anomaly.py
+│   ├── requirements.txt
+│   └── test_anomaly.py
 │
 └── PROJECT_REPORT.md
 ```
@@ -161,7 +164,7 @@ Once locked, a shift becomes a permanent, unmodifiable record — closed issues 
 
 ### Prerequisites
 
-- Node.js (v16+ recommended)
+- Node.js (v18+ recommended)
 - MongoDB (local instance or Atlas connection string)
 - Python 3.x (for the ML module)
 
@@ -186,6 +189,8 @@ npm run dev      # starts with nodemon on default port 5000
 ```bash
 cd elogbook-frontend
 npm install
+# optional: copy .env.example to .env to point at a non-local backend
+# (VITE_API_BASE_URL, baked in at build/dev-server start)
 npm run dev      # starts the Vite dev server
 ```
 
@@ -193,21 +198,40 @@ npm run dev      # starts the Vite dev server
 
 ```bash
 cd elogbook-ml
-pip install -r requirements.txt   # if present
-# invoked automatically by the backend's ML controller — no separate server needed
+pip install -r requirements.txt
+# invoked automatically by the backend's ML controller — no separate server needed.
+# The interpreter must be reachable as `python3` (or set PYTHON_BIN in the
+# backend .env, e.g. to a virtualenv's python).
 ```
 
 ---
 
 ## 🔑 Environment Variables
 
-Create a `.env` file inside `elogbook-backend/`:
+Create a `.env` file inside `elogbook-backend/` (copy `.env.example` there — it documents every variable):
 
 ```env
 PORT=5000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret_key
+CLIENT_URL=http://localhost:5173
 ```
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `MONGO_URI` | ✅ | MongoDB connection string. The server refuses to start without a working connection. |
+| `JWT_SECRET` | ✅ | Secret used to sign auth tokens. Use a long random value in production. |
+| `PORT` | — | API port (default `5000`). |
+| `CLIENT_URL` | — | The one frontend origin allowed by CORS (default `http://localhost:5173`). |
+| `PYTHON_BIN` | — | Python interpreter for the ML module (default `python3`). |
+| `ML_TIMEOUT_MS` | — | Max duration of an anomaly-detection request before it aborts with 504 (default `15000`). |
+| `ML_CONTAMINATION` | — | Expected anomaly share for the Isolation Forest, in (0, 0.5] (default `0.05`). Read by `anomaly.py`. |
+
+The frontend takes one build-time variable (copy `elogbook-frontend/.env.example`):
+
+| Variable | Purpose |
+|---|---|
+| `VITE_API_BASE_URL` | Backend API base URL baked into the frontend bundle (default `http://localhost:5000/api`). Changing it requires a rebuild. |
 
 > ⚠️ Never commit your `.env` file. Add it to `.gitignore` if it isn't already there.
 
@@ -345,8 +369,9 @@ GET /api/analytics/issues
 <summary><b>🤖 ML / Anomaly Detection</b></summary>
 
 ```
-GET /api/ml/anomaly
-GET /api/ml/predictive-maintenance
+GET /api/ml/anomaly?parameterId=<id>
+GET /api/ml/equipment-risk
+GET /api/ml/predictive-maintenance   (deprecated alias of /equipment-risk)
 ```
 </details>
 
@@ -356,23 +381,36 @@ GET /api/ml/predictive-maintenance
 
 - JWT-based authentication on all protected routes
 - Password hashing via `bcryptjs`
+- **Self-registration can never grant a privileged role** — the API ignores any client-supplied role and always creates an `operator`; privileged accounts are provisioned by an admin path (seeder/direct DB today — see Roadmap)
 - Role-based authorization, enforced on both backend and frontend
-- Locked shifts and closed issues are immutable
+- Security headers via `helmet`; rate limiting (global + stricter limits on auth routes) via `express-rate-limit`
+- CORS restricted to the single configured frontend origin (`CLIENT_URL`)
+- Central error handling: malformed IDs and validation errors return clean 400s; genuine 500s return a generic message — internal error details are logged server-side only, never sent to clients
+- Locked shifts and closed issues are immutable; shift lifecycle transitions are atomic and duplicate shifts are rejected by a unique database index
 - Closure remarks are mandatory before an issue can be closed
+- Audit trail covers shift lifecycle **and** issue/event/entry mutations; audit-write failures are logged loudly (`AUDIT FAILURE`) instead of silently dropped
 
 ---
 
 ## 🧪 Testing
 
-**Manual testing covers:** login per role, shift creation, parameter entry with min/max alerts, event/issue logging, handover notes, the full submit → approve → lock flow, PDF export, date-range reports, audit logs, and the ML anomaly/predictive maintenance pages.
-
-**Automated checks:**
+The backend has an automated regression suite (17 tests) that boots the real server against an in-memory MongoDB and exercises it over HTTP — covering registration security, shift uniqueness/locking, error hygiene, audit coverage, and the ML integration's failure modes:
 
 ```bash
-npm run build     # frontend build
-npm run lint      # frontend lint
-node --check file.js   # backend syntax check
+cd elogbook-backend
+npm test
 ```
+
+The ML script has its own contract tests:
+
+```bash
+cd elogbook-ml
+python -m unittest test_anomaly -v
+```
+
+See [`elogbook-backend/tests/README.md`](elogbook-backend/tests/README.md) for what each test file locks in.
+
+**Manual testing covers:** login per role, shift creation, parameter entry with min/max alerts, event/issue logging, handover notes, the full submit → approve → lock flow, PDF export, date-range reports, audit logs, and the ML anomaly/equipment-risk pages.
 
 ---
 
