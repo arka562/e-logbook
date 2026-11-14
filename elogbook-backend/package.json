@@ -7,7 +7,8 @@
     "dev": "nodemon server.js",
     "start": "node server.js",
     "build": "echo \"No build step required\"",
-    "seed:demo": "node scripts/seedDemoData.js"
+    "seed:demo": "node scripts/seedDemoData.js",
+    "test": "node --test tests/*.test.mjs"
   },
   "keywords": [],
   "author": "",
@@ -27,6 +28,7 @@
     "pdfkit": "^0.17.2"
   },
   "devDependencies": {
+    "mongodb-memory-server": "^11.3.0",
     "nodemon": "^1.0.2"
   }
 }
